@@ -51,46 +51,32 @@ $tenant = $stmt->fetch();
             box-sizing: border-box;
         }
 
+        html,
         body {
-            font-family: 'Courier New', 'JetBrains Mono', monospace;
-            background: #f0f0f0;
             margin: 0;
-            padding: 20px;
-            font-size: 12px;
-            line-height: 1.4;
+            padding: 0;
+            background: #f0f0f0;
+            font-family: 'Courier New', 'JetBrains Mono', monospace;
+            font-size: 11px;
+            line-height: 1.35;
+            color: #000;
+        }
+
+        body {
+            padding: 20px 0;
         }
 
         .struk {
-            width: 300px;
+            width: 76mm;
             margin: 0 auto;
             background: #fff;
-            padding: 16px;
-            border-radius: 6px;
+            padding: 12px 10px;
+            border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, .1);
         }
 
         .center {
             text-align: center;
-        }
-
-        .line {
-            border-top: 1px dashed #333;
-            margin: 8px 0;
-        }
-
-        .line-solid {
-            border-top: 1px solid #333;
-            margin: 8px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        td {
-            vertical-align: top;
-            padding: 1px 0;
         }
 
         .right {
@@ -102,29 +88,61 @@ $tenant = $stmt->fetch();
         }
 
         .big {
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .huge {
-            font-size: 16px;
+            font-size: 15px;
+        }
+
+        .small {
+            font-size: 10px;
+        }
+
+        .line {
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+            height: 0;
+        }
+
+        .line-solid {
+            border-top: 1px solid #000;
+            margin: 6px 0;
+            height: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        td,
+        th {
+            padding: 1px 0;
+            vertical-align: top;
+            border: none;
         }
 
         .item-name {
             padding-top: 4px;
+            font-weight: bold;
         }
 
         .item-detail {
             color: #333;
+            font-size: 10px;
         }
 
         .footer-note {
-            font-size: 11px;
-            color: #555;
+            font-size: 10px;
+            color: #333;
             margin-top: 8px;
         }
 
+        /* Toolbar (hanya muncul di layar, tidak saat print) */
         .btn-toolbar {
-            width: 300px;
+            width: 76mm;
             margin: 16px auto 0;
             display: flex;
             gap: 8px;
@@ -132,18 +150,21 @@ $tenant = $stmt->fetch();
 
         .btn {
             flex: 1;
-            padding: 10px;
+            padding: 10px 12px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
             font-family: -apple-system, sans-serif;
             font-size: 13px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            color: #fff;
         }
 
         .btn-print {
             background: #412D15;
-            color: #fff;
         }
 
         .btn-print:hover {
@@ -151,28 +172,46 @@ $tenant = $stmt->fetch();
         }
 
         .btn-back {
-            background: #e5e5e5;
-            color: #333;
+            background: #6c757d;
         }
 
         .btn-back:hover {
-            background: #ccc;
+            background: #5a6268;
         }
 
+        /* ============================================
+           PRINT MODE — Thermal 80mm
+           ============================================ */
         @media print {
+            @page {
+                size: 80mm auto;
+                margin: 2mm;
+            }
+
+            html,
             body {
+                width: 80mm;
+                margin: 0;
+                padding: 0;
                 background: #fff;
+                font-size: 10px;
+            }
+
+            body {
                 padding: 0;
             }
 
             .struk {
+                width: 76mm;
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
                 box-shadow: none;
-                width: 100%;
-                max-width: 300px;
+                border-radius: 0;
             }
 
             .btn-toolbar {
-                display: none;
+                display: none !important;
             }
         }
     </style>
@@ -277,4 +316,3 @@ $tenant = $stmt->fetch();
 </body>
 
 </html>
-EOF
