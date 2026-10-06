@@ -2,13 +2,14 @@
 // actions/recipe_action.php
 require_once __DIR__ . '/../config/bootstrap.php';
 require_login();
-require_role(['owner','manager','gudang']);
+require_role(['owner', 'manager', 'gudang']);
 
 $action = $_GET['action'] ?? '';
 $tenant_id = current_tenant_id();
 
 // Pastikan resep milik tenant (via variant → product → tenant)
-function resep_milik_tenant(PDO $pdo, int $recipe_id, int $tenant_id) {
+function resep_milik_tenant(PDO $pdo, int $recipe_id, int $tenant_id)
+{
     $stmt = $pdo->prepare("
         SELECT r.id, r.variant_id FROM recipes r
         JOIN product_variants v ON v.id = r.variant_id
@@ -20,7 +21,8 @@ function resep_milik_tenant(PDO $pdo, int $recipe_id, int $tenant_id) {
 }
 
 // Pastikan ingredient milik tenant
-function ingredient_milik_tenant(PDO $pdo, int $ingredient_id, int $tenant_id) {
+function ingredient_milik_tenant(PDO $pdo, int $ingredient_id, int $tenant_id)
+{
     $stmt = $pdo->prepare("SELECT id FROM ingredients WHERE id = ? AND tenant_id = ?");
     $stmt->execute([$ingredient_id, $tenant_id]);
     return (bool)$stmt->fetch();
@@ -55,10 +57,16 @@ if ($action === 'add_item') {
         redirect($redirect);
     }
 
-    // Ambil unit dari bahan
-    $stmt = $pdo->prepare("SELECT base_unit, nama FROM ingredients WHERE id = ?");
-    $stmt->execute([$ingredient_id]);
+    // Ambil unit dari bahan (dengan tenant check)
+    $stmt = $pdo->prepare("SELECT base_unit, nama FROM ingredients WHERE id = ? AND tenant_id = ?");
+    $stmt->execute([$ingredient_id, $tenant_id]);
     $ing = $stmt->fetch();
+
+    if (!$ing) {
+        flash_set('error', 'Bahan tidak valid.');
+        redirect($redirect);
+    }
+
     $unit = $ing['base_unit'];
 
     // Cek duplikat
@@ -147,8 +155,6 @@ elseif ($action === 'delete_item') {
     }
 
     redirect($redirect);
-}
-
-else {
+} else {
     redirect('/tokopi/views/recipes.php');
 }

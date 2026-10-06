@@ -108,13 +108,21 @@ try {
         ")->execute([$order_id]);
 
         // Potong stok (idempotent)
-        potong_stok_qris_check($pdo, $order_id);
+        potong_stok_qris_check($pdo, $order_id, $tenant_id);
 
         $pdo->commit();
 
         // Ambil order_no
-        $stmt = $pdo->prepare("SELECT order_no FROM orders WHERE id = ?");
-        $stmt->execute([$order_id]);
+                $pdo->commit();
+
+        // Ambil order_no (dengan tenant check)
+        $stmt = $pdo->prepare("
+            SELECT o.order_no
+            FROM orders o
+            JOIN outlets ou ON ou.id = o.outlet_id
+            WHERE o.id = ? AND ou.tenant_id = ?
+        ");
+        $stmt->execute([$order_id, $tenant_id]);
         $order_no = $stmt->fetchColumn();
 
         echo json_encode([
@@ -160,15 +168,20 @@ try {
 // ============================================
 // Helper: potong stok (idempotent)
 // ============================================
-function potong_stok_qris_check(PDO $pdo, int $order_id): void
+function potong_stok_qris_check(PDO $pdo, int $order_id, int $tenant_id): void
 {
     // Cek apakah sudah pernah dipotong
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM stock_movements WHERE ref_type = 'ORDER' AND ref_id = ?");
     $stmt->execute([(string)$order_id]);
     if ((int)$stmt->fetchColumn() > 0) return;
 
-    $stmt = $pdo->prepare("SELECT outlet_id, cashier_id FROM orders WHERE id = ?");
-    $stmt->execute([$order_id]);
+        $stmt = $pdo->prepare("
+        SELECT o.outlet_id, o.cashier_id
+        FROM orders o
+        JOIN outlets ou ON ou.id = o.outlet_id
+        WHERE o.id = ? AND ou.tenant_id = ?
+    ");
+    $stmt->execute([$order_id, $tenant_id]);
     $order = $stmt->fetch();
     if (!$order) return;
 

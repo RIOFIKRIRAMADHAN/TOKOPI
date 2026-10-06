@@ -241,6 +241,9 @@ if (current_outlet_id()) {
             <a class="nav-link <?= $active_menu === 'reports_sales' ? 'active' : '' ?>" href="/tokopi/views/reports/sales.php">
                 <i class="bi bi-graph-up"></i> Penjualan
             </a>
+            <a class="nav-link <?= $active_menu === 'expenses' ? 'active' : '' ?>" href="/tokopi/views/expenses.php">
+                <i class="bi bi-wallet2"></i> Pengeluaran
+            </a>
         <?php endif; ?>
     </nav>
 </aside>
