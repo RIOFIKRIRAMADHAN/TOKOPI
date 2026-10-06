@@ -1,0 +1,16 @@
+{
+    "name": "tokopi/erp",
+    "description": "Coffee Shop ERP - Tokopi",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^7.4",
+        "midtrans/midtrans-php": "^2.5",
+        "dompdf/dompdf": "^2.0"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}
