@@ -37,7 +37,7 @@ $stmt = $pdo->prepare("
     FROM orders o
     JOIN outlets ou ON ou.id = o.outlet_id
     WHERE ou.tenant_id = ?
-      AND o.status = 'PAID'
+      AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND DATE(o.created_at) = CURDATE()
       $outlet_sql
 ");
@@ -60,7 +60,7 @@ $stmt = $pdo->prepare("
     FROM orders o
     JOIN outlets ou ON ou.id = o.outlet_id
     WHERE ou.tenant_id = ?
-      AND o.status = 'PAID'
+      AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND MONTH(o.created_at) = MONTH(CURDATE())
       AND YEAR(o.created_at) = YEAR(CURDATE())
       $outlet_sql
@@ -84,7 +84,7 @@ $stmt = $pdo->prepare("
     JOIN orders o ON o.id = oi.order_id
     JOIN outlets ou ON ou.id = o.outlet_id
     WHERE ou.tenant_id = ?
-      AND o.status = 'PAID'
+      AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
       $outlet_sql
     GROUP BY oi.variant_id, oi.product_nama, oi.variant_nama
@@ -129,7 +129,7 @@ $stmt = $pdo->prepare("
         COALESCE(SUM(o.cost_total), 0) AS hpp
     FROM outlets ou
     LEFT JOIN orders o ON o.outlet_id = ou.id
-        AND o.status = 'PAID'
+        AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
         AND DATE(o.created_at) = CURDATE()
     WHERE ou.tenant_id = ? AND ou.is_active = 1
     GROUP BY ou.id, ou.nama
@@ -148,7 +148,7 @@ $stmt = $pdo->prepare("
     FROM orders o
     JOIN outlets ou ON ou.id = o.outlet_id
     WHERE ou.tenant_id = ?
-      AND o.status = 'PAID'
+      AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
       $outlet_sql
     GROUP BY DATE(o.created_at)
@@ -186,9 +186,9 @@ require_once __DIR__ . '/../includes/header.php';
     <?php if (is_role('owner')): ?>
         <form method="GET" class="d-flex gap-2">
             <select name="outlet" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
-                <option value="0">Semua Outlet</option>
+                <option value="0" <?= $outlet_filter == 0 ? 'selected' : '' ?>>Semua Outlet</option>
                 <?php foreach ($outlets as $o): ?>
-                    <option value="<?= (int)$o['id'] ?>" <?= (int)$o['id'] == current_outlet_id() ? 'selected' : '' ?>>
+                    <option value="<?= (int)$o['id'] ?>" <?= $outlet_filter == $o['id'] ? 'selected' : '' ?>>
                         <?= e($o['nama']) ?>
                     </option>
                 <?php endforeach; ?>

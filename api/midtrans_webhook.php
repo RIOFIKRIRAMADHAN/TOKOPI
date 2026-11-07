@@ -67,7 +67,7 @@ if (!$payment) {
 }
 
 // 4. Idempotent: kalau sudah final, tidak perlu proses lagi
-if (in_array($payment['status'], ['SETTLED','REFUNDED'], true)) {
+if (in_array($payment['status'], ['SETTLED', 'REFUNDED'], true)) {
     echo json_encode(['message' => 'OK']);
     exit;
 }
@@ -77,7 +77,7 @@ $tx_status = $payload['transaction_status'] ?? '';
 try {
     $pdo->beginTransaction();
 
-    if (in_array($tx_status, ['capture','settlement'], true)) {
+        if (in_array($tx_status, ['capture','settlement'], true)) {
         // Update payment
         $pdo->prepare("
             UPDATE payments
@@ -89,22 +89,29 @@ try {
         $pdo->prepare("UPDATE orders SET status = 'PAID', paid_at = NOW() WHERE id = ?")
             ->execute([$payment['order_id']]);
 
+        // Mark voucher USED
+        $pdo->prepare("
+            UPDATE customer_redemptions
+            SET status = 'USED', used_at = NOW()
+            WHERE order_id = ? AND status IN ('UNUSED', 'RESERVED')
+        ")->execute([$payment['order_id']]);
+
         // Potong stok
         potong_stok_qris_webhook($pdo, (int)$payment['order_id'], (int)$payment['outlet_id']);
-    }
-    elseif (in_array($tx_status, ['deny','cancel'], true)) {
+
+        // Award poin loyalty
+        award_points_for_order($pdo, (int)$payment['order_id']);
+    } elseif (in_array($tx_status, ['deny', 'cancel'], true)) {
         $pdo->prepare("UPDATE payments SET status = 'FAILED', raw_payload = ? WHERE id = ?")
             ->execute([json_encode($payload, JSON_UNESCAPED_UNICODE), $payment['id']]);
         $pdo->prepare("UPDATE orders SET status = 'CANCELLED' WHERE id = ?")
             ->execute([$payment['order_id']]);
-    }
-    elseif ($tx_status === 'expire') {
+    } elseif ($tx_status === 'expire') {
         $pdo->prepare("UPDATE payments SET status = 'EXPIRED', raw_payload = ? WHERE id = ?")
             ->execute([json_encode($payload, JSON_UNESCAPED_UNICODE), $payment['id']]);
         $pdo->prepare("UPDATE orders SET status = 'CANCELLED' WHERE id = ?")
             ->execute([$payment['order_id']]);
-    }
-    elseif ($tx_status === 'refund' || $tx_status === 'partial_refund') {
+    } elseif ($tx_status === 'refund' || $tx_status === 'partial_refund') {
         $pdo->prepare("UPDATE payments SET status = 'REFUNDED', raw_payload = ? WHERE id = ?")
             ->execute([json_encode($payload, JSON_UNESCAPED_UNICODE), $payment['id']]);
     }
@@ -112,7 +119,6 @@ try {
 
     $pdo->commit();
     echo json_encode(['message' => 'OK']);
-
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollBack();
     file_put_contents(

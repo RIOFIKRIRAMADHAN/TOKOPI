@@ -21,9 +21,10 @@ $tenant_id = current_tenant_id();
 $outlet_id = current_outlet_id();
 $user_id   = current_user_id();
 
+
 // Ambil shift aktif kasir (kalau ada)
 $shift_id = null;
-if (is_role('kasir')) {
+if (is_role('kasir') || is_role('owner') || is_role('manager')) {
     $stmt = $pdo->prepare("SELECT id FROM shifts WHERE cashier_id = ? AND status = 'OPEN' LIMIT 1");
     $stmt->execute([$user_id]);
     $shift_id = $stmt->fetchColumn() ?: null;
@@ -297,6 +298,9 @@ try {
         ");
         $stmt->execute([$order_id, $grand_total, $cash_received, $change]);
     }
+
+    // Award poin loyalty (kalau ada customer_account_id di order)
+    award_points_for_order($pdo, $order_id);
 
     // 8. Potong stok (hanya bahan, karena stok hanya untuk bahan)
     foreach ($lines as $l) {

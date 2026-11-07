@@ -9,4 +9,5 @@ require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/midtrans.php';
 require_once __DIR__ . '/../includes/helpers.php';
+require_once __DIR__ . '/../includes/loyalty.php';
 require_once __DIR__ . '/../includes/auth.php';

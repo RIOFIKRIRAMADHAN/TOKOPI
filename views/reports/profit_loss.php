@@ -37,7 +37,7 @@ $stmt = $pdo->prepare("
     FROM orders o
     JOIN outlets ou ON ou.id = o.outlet_id
     WHERE ou.tenant_id = ?
-      AND o.status = 'PAID'
+      AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND DATE(o.created_at) BETWEEN ? AND ?
       $outlet_sql
 ");
@@ -110,7 +110,7 @@ if ($filter_outlet === 0) {
                 COALESCE(SUM(grand_total), 0) AS omzet,
                 COALESCE(SUM(cost_total), 0) AS hpp
             FROM orders
-            WHERE outlet_id = ? AND status = 'PAID'
+            WHERE outlet_id = ? AND status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
               AND DATE(created_at) BETWEEN ? AND ?
         ");
         $stmt->execute([$o['id'], $date_from, $date_to]);

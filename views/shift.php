@@ -28,6 +28,32 @@ $stmt = $pdo->prepare("
 $stmt->execute([$user_id]);
 $active_shift = $stmt->fetch();
 
+// Hitung ringkasan jika ada shift aktif
+$cash_in = 0;
+$expected = 0;
+$sum = ['total_order' => 0, 'total_omzet' => 0];
+
+if ($active_shift) {
+    $stmt = $pdo->prepare("
+        SELECT COUNT(*) AS total_order, COALESCE(SUM(o.grand_total), 0) AS total_omzet
+        FROM orders o
+        WHERE o.shift_id = ? AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
+    ");
+    $stmt->execute([$active_shift['id']]);
+    $sum = $stmt->fetch();
+
+    $stmt = $pdo->prepare("
+        SELECT COALESCE(SUM(p.amount), 0)
+        FROM payments p
+        JOIN orders o ON o.id = p.order_id
+        WHERE o.shift_id = ? AND p.method = 'CASH' AND p.status = 'SETTLED'
+    ");
+    $stmt->execute([$active_shift['id']]);
+    $cash_in = (float)$stmt->fetchColumn();
+
+    $expected = (float)$active_shift['opening_cash'] + $cash_in;
+}
+
 // Riwayat shift CLOSED
 $stmt = $pdo->prepare("
     SELECT s.*, u.nama AS cashier_nama
@@ -88,27 +114,6 @@ require_once __DIR__ . '/../includes/header.php';
                         <span class="badge bg-success me-2">AKTIF</span>
                         <small class="text-muted">Sejak <?= date('d/m/Y H:i', strtotime($active_shift['opened_at'])) ?></small>
                     </div>
-
-                    <?php
-                    $stmt = $pdo->prepare("
-                        SELECT COUNT(*) AS total_order, COALESCE(SUM(o.grand_total), 0) AS total_omzet
-                        FROM orders o
-                        WHERE o.shift_id = ? AND o.status = 'PAID'
-                    ");
-                    $stmt->execute([$active_shift['id']]);
-                    $sum = $stmt->fetch();
-
-                    $stmt = $pdo->prepare("
-                        SELECT COALESCE(SUM(p.amount), 0)
-                        FROM payments p
-                        JOIN orders o ON o.id = p.order_id
-                        WHERE o.shift_id = ? AND p.method = 'CASH' AND p.status = 'SETTLED'
-                    ");
-                    $stmt->execute([$active_shift['id']]);
-                    $cash_in = (float)$stmt->fetchColumn();
-
-                    $expected = (float)$active_shift['opening_cash'] + $cash_in;
-                    ?>
 
                     <table class="table table-sm mb-3">
                         <tr>

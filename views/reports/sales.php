@@ -48,7 +48,7 @@ $sql = "
         COALESCE(SUM(o.discount_total), 0) AS total_diskon
     FROM orders o
     JOIN outlets ou ON ou.id = o.outlet_id
-    WHERE o.status = 'PAID'
+    WHERE o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND DATE(o.created_at) BETWEEN ? AND ?
       $tenant_filter_sql
       $outlet_sql
@@ -74,7 +74,7 @@ $sql = "
         COALESCE(SUM(o.cost_total), 0) AS hpp
     FROM orders o
     JOIN outlets ou ON ou.id = o.outlet_id
-    WHERE o.status = 'PAID'
+    WHERE o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND DATE(o.created_at) BETWEEN ? AND ?
       $tenant_filter_sql
       $outlet_sql
@@ -97,7 +97,7 @@ $sql = "
     FROM payments p
     JOIN orders o ON o.id = p.order_id
     JOIN outlets ou ON ou.id = o.outlet_id
-    WHERE o.status = 'PAID'
+    WHERE o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND p.status = 'SETTLED'
       AND DATE(o.created_at) BETWEEN ? AND ?
       $tenant_filter_sql
@@ -123,7 +123,7 @@ if ($filter_outlet === 0) {
             COALESCE(SUM(o.cost_total), 0) AS hpp
         FROM outlets ou
         LEFT JOIN orders o ON o.outlet_id = ou.id
-            AND o.status = 'PAID'
+            AND o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
             AND DATE(o.created_at) BETWEEN ? AND ?
         WHERE ou.tenant_id = ? AND ou.is_active = 1
         GROUP BY ou.id, ou.nama
@@ -147,7 +147,7 @@ $sql = "
     FROM order_items oi
     JOIN orders o ON o.id = oi.order_id
     JOIN outlets ou ON ou.id = o.outlet_id
-    WHERE o.status = 'PAID'
+    WHERE o.status IN ('PAID', 'PREPARING', 'READY', 'COMPLETED')
       AND DATE(o.created_at) BETWEEN ? AND ?
       $tenant_filter_sql
       $outlet_sql

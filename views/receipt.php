@@ -34,6 +34,13 @@ $stmt = $pdo->prepare("SELECT * FROM payments WHERE order_id = ? ORDER BY id DES
 $stmt->execute([$order_id]);
 $payment = $stmt->fetch();
 
+// Mode: struk | kitchen
+$mode = $_GET['mode'] ?? 'struk';
+$is_kitchen = ($mode === 'kitchen');
+
+// Kalau kitchen mode, potong data pelanggan (privasi)
+// Tapi tetap tampilkan nama (untuk panggil)
+
 // Tenant info
 $stmt = $pdo->prepare("SELECT nama_toko FROM tenants WHERE id = ?");
 $stmt->execute([$tenant_id]);
@@ -45,7 +52,7 @@ $tenant = $stmt->fetch();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Struk - <?= e($order['order_no']) ?></title>
+    <title><?= $is_kitchen ? 'Tiket Dapur' : 'Struk' ?> - <?= e($order['order_no']) ?></title>
     <style>
         * {
             box-sizing: border-box;
@@ -115,6 +122,14 @@ $tenant = $stmt->fetch();
             width: 100%;
             border-collapse: collapse;
             font-size: 11px;
+        }
+
+        .kitchen-ticket {
+            font-size: 12px;
+        }
+
+        .kitchen-ticket .item-name {
+            font-size: 14px;
         }
 
         td,
@@ -218,17 +233,24 @@ $tenant = $stmt->fetch();
 </head>
 
 <body>
-    <div class="struk">
-        <div class="center">
-            <div class="bold big"><?= e($tenant['nama_toko']) ?></div>
-            <div><?= e($order['outlet_nama']) ?></div>
-            <?php if ($order['outlet_alamat']): ?>
-                <div style="font-size:11px;"><?= e($order['outlet_alamat']) ?></div>
-            <?php endif; ?>
-            <?php if ($order['outlet_hp']): ?>
-                <div style="font-size:11px;">Telp: <?= e($order['outlet_hp']) ?></div>
-            <?php endif; ?>
-        </div>
+    <div class="struk <?= $is_kitchen ? 'kitchen-ticket' : '' ?>">
+        <?php if (!$is_kitchen): ?>
+            <div class="center">
+                <div class="bold big"><?= e($tenant['nama_toko']) ?></div>
+                <div><?= e($order['outlet_nama']) ?></div>
+                <?php if ($order['outlet_alamat']): ?>
+                    <div style="font-size:11px;"><?= e($order['outlet_alamat']) ?></div>
+                <?php endif; ?>
+                <?php if ($order['outlet_hp']): ?>
+                    <div style="font-size:11px;">Telp: <?= e($order['outlet_hp']) ?></div>
+                <?php endif; ?>
+            </div>
+        <?php else: ?>
+            <div class="center">
+                <div class="bold big" style="font-size:16px;">🍳 TIKET DAPUR</div>
+                <div style="font-size:14px; font-weight:bold;"><?= e($order['outlet_nama']) ?></div>
+            </div>
+        <?php endif; ?>
 
         <div class="line"></div>
 
@@ -241,14 +263,28 @@ $tenant = $stmt->fetch();
                 <td>Tanggal</td>
                 <td class="right"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></td>
             </tr>
-            <tr>
-                <td>Kasir</td>
-                <td class="right"><?= e($order['cashier_nama'] ?? '-') ?></td>
-            </tr>
-            <tr>
-                <td>Channel</td>
-                <td class="right"><?= e($order['channel']) ?></td>
-            </tr>
+            <?php if ($order['customer_name']): ?>
+                <tr>
+                    <td>Nama</td>
+                    <td class="right bold"><?= e($order['customer_name']) ?></td>
+                </tr>
+            <?php endif; ?>
+            <?php if ($order['table_code']): ?>
+                <tr>
+                    <td>Meja</td>
+                    <td class="right bold"><?= e($order['table_code']) ?></td>
+                </tr>
+            <?php endif; ?>
+            <?php if (!$is_kitchen): ?>
+                <tr>
+                    <td>Kasir</td>
+                    <td class="right"><?= e($order['cashier_nama'] ?? '-') ?></td>
+                </tr>
+                <tr>
+                    <td>Channel</td>
+                    <td class="right"><?= e($order['channel']) ?></td>
+                </tr>
+            <?php endif; ?>
         </table>
 
         <div class="line"></div>
@@ -263,56 +299,74 @@ $tenant = $stmt->fetch();
                 </tr>
             </table>
         <?php endforeach; ?>
+        <?php if (!$is_kitchen): ?>
+            <div class="line"></div>
 
-        <div class="line"></div>
-
-        <table>
-            <tr class="bold big">
-                <td>TOTAL</td>
-                <td class="right">Rp <?= number_format((float)$order['grand_total'], 0, ',', '.') ?></td>
-            </tr>
-            <?php if ($payment): ?>
-                <tr>
-                    <td><?= e($payment['method']) ?></td>
-                    <td class="right">Rp <?= number_format((float)$payment['amount'], 0, ',', '.') ?></td>
-                </tr>
-                <?php if ($payment['cash_received']): ?>
+            <?php if (!empty($order['discount_total']) && $order['discount_total'] > 0): ?>
+                <table>
                     <tr>
-                        <td>Tunai</td>
-                        <td class="right">Rp <?= number_format((float)$payment['cash_received'], 0, ',', '.') ?></td>
+                        <td>Subtotal</td>
+                        <td class="right">Rp <?= number_format((float)$order['subtotal'], 0, ',', '.') ?></td>
                     </tr>
-                <?php endif; ?>
-                <?php if ($payment['change_given']): ?>
                     <tr>
-                        <td>Kembali</td>
-                        <td class="right">Rp <?= number_format((float)$payment['change_given'], 0, ',', '.') ?></td>
+                        <td>Diskon</td>
+                        <td class="right">− Rp <?= number_format((float)$order['discount_total'], 0, ',', '.') ?></td>
                     </tr>
-                <?php endif; ?>
+                </table>
             <?php endif; ?>
-        </table>
 
-        <div class="line-solid"></div>
+            <table>
+                <tr class="bold big">
+                    <td>TOTAL</td>
+                    <td class="right">Rp <?= number_format((float)$order['grand_total'], 0, ',', '.') ?></td>
+                </tr>
+                <?php if ($payment): ?>
+                    <tr>
+                        <td><?= e($payment['method']) ?></td>
+                        <td class="right">Rp <?= number_format((float)$payment['amount'], 0, ',', '.') ?></td>
+                    </tr>
+                    <?php if ($payment['cash_received']): ?>
+                        <tr>
+                            <td>Tunai</td>
+                            <td class="right">Rp <?= number_format((float)$payment['cash_received'], 0, ',', '.') ?></td>
+                        </tr>
+                    <?php endif; ?>
+                    <?php if ($payment['change_given']): ?>
+                        <tr>
+                            <td>Kembali</td>
+                            <td class="right">Rp <?= number_format((float)$payment['change_given'], 0, ',', '.') ?></td>
+                        </tr>
+                    <?php endif; ?>
+                <?php endif; ?>
+            </table>
 
-        <div class="center footer-note">
-            <div>Terima kasih 🙏</div>
-            <div>Selamat menikmati!</div>
-            <div style="margin-top:6px;">*** <?= e($order['order_no']) ?> ***</div>
-        </div>
-    </div>
+            <div class="line-solid"></div>
 
-    <div class="btn-toolbar">
-        <a href="/tokopi/views/pos.php" class="btn btn-back" style="text-decoration:none; text-align:center;">
-            ← Kembali ke POS
-        </a>
-        <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
-    </div>
-
-    <script>
-        // Auto-print kalau dipanggil dengan ?print=1
-        <?php if (!empty($_GET['print'])): ?>
-            window.addEventListener('load', () => setTimeout(() => window.print(), 300));
+            <div class="center footer-note">
+                <div>Terima kasih 🙏</div>
+                <div>Selamat menikmati!</div>
+                <div style="margin-top:6px;">*** <?= e($order['order_no']) ?> ***</div>
+            </div>
+        <?php else: ?>
+            <div class="line-solid"></div>
+            <div class="center footer-note" style="font-size: 10px;">
+                *** <?= e($order['order_no']) ?> ***
+            </div>
         <?php endif; ?>
-    </script>
+
+        <div class="btn-toolbar">
+            <a href="/tokopi/views/pos.php" class="btn btn-back" style="text-decoration:none; text-align:center;">
+                ← Kembali ke POS
+            </a>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
+        </div>
+
+        <script>
+            // Auto-print kalau dipanggil dengan ?print=1
+            <?php if (!empty($_GET['print'])): ?>
+                window.addEventListener('load', () => setTimeout(() => window.print(), 300));
+            <?php endif; ?>
+        </script>
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/bootstrap.php';
 require_login();
-require_role(['owner','manager','gudang']);
+require_role(['owner', 'manager', 'gudang']);
 
 $page_title = 'Stok';
 $active_menu = 'stock';
@@ -9,10 +9,7 @@ $tenant_id = current_tenant_id();
 $outlet_id = current_outlet_id();
 
 // Owner bisa pilih outlet mana yang dilihat
-$filter_outlet = $outlet_id;
-if (is_role('owner')) {
-    $filter_outlet = (int)($_GET['outlet'] ?? 0);
-}
+$filter_outlet =  current_outlet_id();
 
 // Ambil semua outlet (untuk dropdown kalau owner)
 $stmt = $pdo->prepare("SELECT id, code, nama FROM outlets WHERE tenant_id = ? AND is_active = 1 ORDER BY id");
@@ -75,28 +72,28 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Filter Outlet (khusus owner) -->
 <?php if (is_role('owner')): ?>
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-    <form class="d-flex gap-2" method="GET">
-        <label class="col-form-label text-muted small">Lihat Outlet:</label>
-                <select class="form-select form-select-sm" style="width:auto;"
-                onchange="window.location.href='/tokopi/actions/switch_outlet.php?outlet_id=' + this.value + '&redirect=' + encodeURIComponent('/tokopi/views/stock.php')">˝
-            <?php foreach ($outlets as $o): ?>
-                <option value="<?= (int)$o['id'] ?>" <?= $filter_outlet === (int)$o['id'] ? 'selected' : '' ?>>
-                    <?= e($o['nama']) ?> (<?= e($o['code']) ?>)
-                </option>
-            <?php endforeach; ?>
-        </select>
-    </form>
-    <button class="btn btn-espresso" data-bs-toggle="modal" data-bs-target="#modalAdjust">
-        <i class="bi bi-sliders me-1"></i> Adjust Stok
-    </button>
-</div>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div class="d-flex gap-2">
+            <label class="col-form-label text-muted small">Lihat Outlet:</label>
+            <select class="form-select form-select-sm" style="width:auto;"
+                onchange="window.location.href='/tokopi/actions/switch_outlet.php?outlet_id=' + this.value + '&redirect=' + encodeURIComponent('/tokopi/views/stock.php')">
+                <?php foreach ($outlets as $o): ?>
+                    <option value="<?= (int)$o['id'] ?>" <?= $filter_outlet == $o['id'] ? 'selected' : '' ?>>
+                        <?= e($o['nama']) ?> (<?= e($o['code']) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <button class="btn btn-espresso" data-bs-toggle="modal" data-bs-target="#modalAdjust">
+            <i class="bi bi-sliders me-1"></i> Adjust Stok
+        </button>
+    </div>
 <?php else: ?>
-<div class="d-flex justify-content-end mb-3">
-    <button class="btn btn-espresso" data-bs-toggle="modal" data-bs-target="#modalAdjust">
-        <i class="bi bi-sliders me-1"></i> Adjust Stok
-    </button>
-</div>
+    <div class="d-flex justify-content-end mb-3">
+        <button class="btn btn-espresso" data-bs-toggle="modal" data-bs-target="#modalAdjust">
+            <i class="bi bi-sliders me-1"></i> Adjust Stok
+        </button>
+    </div>
 <?php endif; ?>
 
 <!-- Stats -->
@@ -197,11 +194,11 @@ require_once __DIR__ . '/../includes/header.php';
                             </td>
                             <td class="text-end">
                                 <button class="btn btn-sm btn-outline-dark"
-                                        onclick='openAdjustSingle(<?= json_encode($s, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'>
+                                    onclick='openAdjustSingle(<?= json_encode($s, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'>
                                     <i class="bi bi-sliders"></i>
                                 </button>
                                 <a href="/tokopi/views/stock_history.php?ingredient_id=<?= (int)$s['ingredient_id'] ?>&outlet_id=<?= (int)$filter_outlet ?>"
-                                   class="btn btn-sm btn-outline-dark" title="Riwayat">
+                                    class="btn btn-sm btn-outline-dark" title="Riwayat">
                                     <i class="bi bi-clock-history"></i>
                                 </a>
                             </td>
@@ -230,9 +227,9 @@ require_once __DIR__ . '/../includes/header.php';
                         <option value="">— Pilih Bahan —</option>
                         <?php foreach ($stocks as $s): ?>
                             <option value="<?= (int)$s['ingredient_id'] ?>"
-                                    data-qty="<?= (float)$s['qty'] ?>"
-                                    data-unit="<?= e($s['base_unit']) ?>"
-                                    data-nama="<?= e($s['ingredient_nama']) ?>">
+                                data-qty="<?= (float)$s['qty'] ?>"
+                                data-unit="<?= e($s['base_unit']) ?>"
+                                data-nama="<?= e($s['ingredient_nama']) ?>">
                                 [<?= e($s['code']) ?>] <?= e($s['ingredient_nama']) ?> — <?= number_format((float)$s['qty'], 2, ',', '.') ?> <?= e($s['base_unit']) ?>
                             </option>
                         <?php endforeach; ?>
@@ -247,7 +244,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <label class="form-label">Jenis Penyesuaian <span class="text-danger">*</span></label>
                     <select name="mode" id="adj_mode" class="form-select" required onchange="updatePreview()">
                         <option value="add">➕ Tambah (Stock In)</option>
-                        <option value="subtract">➖ Kurangi (Waste / Loss)</option>
+                        <option value="subtract">➖Kurangi (Waste / Loss)</option>
                         <option value="set">🔧 Set ke Angka Baru</option>
                     </select>
                 </div>
@@ -256,7 +253,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <label class="form-label">Jumlah <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <input type="number" name="qty" id="adj_qty" class="form-control" required
-                               min="0.01" step="0.01" placeholder="0">
+                            min="0.01" step="0.01" placeholder="0">
                         <span class="input-group-text" id="adj_unit">—</span>
                     </div>
                 </div>
@@ -264,7 +261,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="mb-3">
                     <label class="form-label">Alasan / Catatan</label>
                     <input type="text" name="note" class="form-control"
-                           placeholder="contoh: stok opname, bahan tumpah, dsb">
+                        placeholder="contoh: stok opname, bahan tumpah, dsb">
                 </div>
             </div>
             <div class="modal-footer">
@@ -311,7 +308,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="mb-3">
                     <label class="form-label">Alasan / Catatan</label>
                     <input type="text" name="note" class="form-control"
-                           placeholder="contoh: stok opname, bahan tumpah">
+                        placeholder="contoh: stok opname, bahan tumpah">
                 </div>
             </div>
             <div class="modal-footer">
@@ -323,33 +320,33 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
-function showCurrentQty() {
-    const sel = document.getElementById('adj_ingredient');
-    const opt = sel.options[sel.selectedIndex];
-    if (!opt.value) {
-        document.getElementById('current-info').style.display = 'none';
-        document.getElementById('adj_unit').textContent = '—';
-        return;
+    function showCurrentQty() {
+        const sel = document.getElementById('adj_ingredient');
+        const opt = sel.options[sel.selectedIndex];
+        if (!opt.value) {
+            document.getElementById('current-info').style.display = 'none';
+            document.getElementById('adj_unit').textContent = '—';
+            return;
+        }
+        const qty = opt.getAttribute('data-qty');
+        const unit = opt.getAttribute('data-unit');
+
+        document.getElementById('current-info').style.display = 'block';
+        document.getElementById('current-qty').textContent = parseFloat(qty).toLocaleString('id-ID');
+        document.getElementById('current-unit').textContent = unit;
+        document.getElementById('adj_unit').textContent = unit;
     }
-    const qty  = opt.getAttribute('data-qty');
-    const unit = opt.getAttribute('data-unit');
 
-    document.getElementById('current-info').style.display = 'block';
-    document.getElementById('current-qty').textContent = parseFloat(qty).toLocaleString('id-ID');
-    document.getElementById('current-unit').textContent = unit;
-    document.getElementById('adj_unit').textContent = unit;
-}
+    function updatePreview() {}
 
-function updatePreview() {}
-
-function openAdjustSingle(data) {
-    document.getElementById('s_ingredient_id').value = data.ingredient_id;
-    document.getElementById('s_nama').textContent    = data.ingredient_nama;
-    document.getElementById('s_current_qty').textContent = parseFloat(data.qty).toLocaleString('id-ID');
-    document.getElementById('s_unit').textContent    = data.base_unit;
-    document.getElementById('s_unit_input').textContent = data.base_unit;
-    new bootstrap.Modal('#modalAdjustSingle').show();
-}
+    function openAdjustSingle(data) {
+        document.getElementById('s_ingredient_id').value = data.ingredient_id;
+        document.getElementById('s_nama').textContent = data.ingredient_nama;
+        document.getElementById('s_current_qty').textContent = parseFloat(data.qty).toLocaleString('id-ID');
+        document.getElementById('s_unit').textContent = data.base_unit;
+        document.getElementById('s_unit_input').textContent = data.base_unit;
+        new bootstrap.Modal('#modalAdjustSingle').show();
+    }
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

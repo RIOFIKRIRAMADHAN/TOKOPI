@@ -35,11 +35,22 @@ if (!$order) {
     exit;
 }
 
-// Kalau sudah PAID, langsung return
-if ($order['status'] === 'PAID') {
+// Kalau sudah PAID/PREPARING/READY/COMPLETED, langsung return + pastikan poin sudah di-award
+if (in_array($order['status'], ['PAID', 'PREPARING', 'READY', 'COMPLETED'], true)) {
+    // Idempotent: kalau poin belum di-award, award sekarang
+    try {
+        $pdo->beginTransaction();
+        award_points_for_order($pdo, $order_id);
+        $pdo->commit();
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        error_log('Award points failed on polling: ' . $e->getMessage());
+    }
+
     echo json_encode([
-        'status'   => 'PAID',
-        'order_no' => $order['order_no'],
+        'status'       => 'PAID',
+        'order_no'     => $order['order_no'],
+        'order_status' => $order['status'],
     ]);
     exit;
 }
@@ -109,11 +120,20 @@ try {
 
         // Potong stok (idempotent)
         potong_stok_qris_check($pdo, $order_id, $tenant_id);
+        // Mark voucher USED kalau ada (dari RESERVED → USED)
+        $pdo->prepare("
+            UPDATE customer_redemptions
+            SET status = 'USED', used_at = NOW()
+            WHERE order_id = ? AND status IN ('UNUSED', 'RESERVED')
+        ")->execute([$order_id]);
 
-        $pdo->commit();
+        potong_stok_qris_check($pdo, $order_id, $tenant_id);
+
+        // Award poin loyalty (kalau customer login)
+        award_points_for_order($pdo, $order_id);
 
         // Ambil order_no
-                $pdo->commit();
+        $pdo->commit();
 
         // Ambil order_no (dengan tenant check)
         $stmt = $pdo->prepare("
@@ -142,6 +162,13 @@ try {
         $pdo->prepare("UPDATE orders SET status = 'CANCELLED' WHERE id = ? AND status = 'PENDING_PAYMENT'")
             ->execute([$order_id]);
 
+        // Kembalikan voucher ke UNUSED
+        $pdo->prepare("
+                UPDATE customer_redemptions
+                SET order_id = NULL, status = 'UNUSED'
+                WHERE order_id = ? AND status IN ('UNUSED', 'RESERVED')
+            ")->execute([$order_id]);
+
         $pdo->commit();
 
         echo json_encode(['status' => 'CANCELLED', 'reason' => $tx_status]);
@@ -154,7 +181,6 @@ try {
         'midtrans_status' => $tx_status,
     ]);
     exit;
-
 } catch (\Exception $e) {
     // Midtrans error (mis. 404 transaction not found) → tetap PENDING
     echo json_encode([
@@ -175,7 +201,7 @@ function potong_stok_qris_check(PDO $pdo, int $order_id, int $tenant_id): void
     $stmt->execute([(string)$order_id]);
     if ((int)$stmt->fetchColumn() > 0) return;
 
-        $stmt = $pdo->prepare("
+    $stmt = $pdo->prepare("
         SELECT o.outlet_id, o.cashier_id
         FROM orders o
         JOIN outlets ou ON ou.id = o.outlet_id

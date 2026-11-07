@@ -54,12 +54,30 @@ if (current_outlet_id()) {
             background: #000;
             color: #fff;
             width: 260px;
-            min-height: 100vh;
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
-            padding: 1.25rem 0.875rem;
+            padding: 1.25rem 0.875rem 2rem;
             overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .2);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, .35);
         }
 
         .sidebar-brand {
@@ -70,6 +88,10 @@ if (current_outlet_id()) {
             padding: 0.5rem 1rem 1.25rem;
             border-bottom: 1px solid rgba(255, 255, 255, .08);
             margin-bottom: 1rem;
+            position: sticky;
+            top: -1.25rem;
+            background: #000;
+            z-index: 10;
         }
 
         .sidebar-brand small {
@@ -246,6 +268,9 @@ if (current_outlet_id()) {
                 <a class="nav-link <?= $active_menu === 'shift' ? 'active' : '' ?>" href="/tokopi/views/shift.php">
                     <i class="bi bi-clock-history"></i> Shift
                 </a>
+                <a class="nav-link <?= $active_menu === 'qr_orders' ? 'active' : '' ?>" href="/tokopi/views/qr_orders.php">
+                    <i class="bi bi-bell"></i> Antrian QR <span class="badge bg-danger ms-1" id="sidebar-qr-count" style="display:none;">0</span>
+                </a>
             <?php endif; ?>
 
             <?php if (in_array(current_user_role(), ['owner', 'manager', 'gudang'])): ?>
@@ -275,6 +300,12 @@ if (current_outlet_id()) {
                 <a class="nav-link <?= $active_menu === 'users' ? 'active' : '' ?>" href="/tokopi/views/users.php">
                     <i class="bi bi-people"></i> Pengguna
                 </a>
+                <a class="nav-link <?= $active_menu === 'settings' ? 'active' : '' ?>" href="/tokopi/views/settings.php">
+                    <i class="bi bi-gear"></i> Pengaturan Toko
+                </a>
+                <a class="nav-link <?= $active_menu === 'tables' ? 'active' : '' ?>" href="/tokopi/views/tables.php">
+                    <i class="bi bi-grid-3x3"></i> Meja & QR
+                </a>
             <?php endif; ?>
 
             <?php if (in_array(current_user_role(), ['owner', 'manager', 'finance'])): ?>
@@ -287,6 +318,20 @@ if (current_outlet_id()) {
                 </a>
                 <a class="nav-link <?= $active_menu === 'reports_pl' ? 'active' : '' ?>" href="/tokopi/views/reports/profit_loss.php">
                     <i class="bi bi-calculator"></i> Laba Rugi
+                </a>
+            <?php endif; ?>
+            <?php if (in_array(current_user_role(), ['owner', 'manager', 'finance'])): ?>
+                <div class="sidebar-section">Loyalty</div>
+                <a class="nav-link <?= $active_menu === 'customers' ? 'active' : '' ?>" href="/tokopi/views/customers.php">
+                    <i class="bi bi-people"></i> Pelanggan
+                </a>
+                <?php if (in_array(current_user_role(), ['owner', 'manager'])): ?>
+                    <a class="nav-link <?= $active_menu === 'rewards_manage' ? 'active' : '' ?>" href="/tokopi/views/rewards_manage.php">
+                        <i class="bi bi-gift"></i> Rewards
+                    </a>
+                <?php endif; ?>
+                <a class="nav-link <?= $active_menu === 'reports_loyalty' ? 'active' : '' ?>" href="/tokopi/views/reports/loyalty.php">
+                    <i class="bi bi-bar-chart"></i> Laporan Loyalty
                 </a>
             <?php endif; ?>
         </nav>
