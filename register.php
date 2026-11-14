@@ -18,28 +18,13 @@ old_clear();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <link href="/tokopi/assets/css/app.css" rel="stylesheet">
     <style>
-        :root { --espresso: #412D15; --sand: #E1DCC9; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #FAF9F5; min-height: 100vh; }
-        h1, h2, h3 { font-family: 'Playfair Display', serif; color: var(--espresso); }
-        .auth-card {
-            max-width: 480px; margin: 5vh auto; background: #fff;
-            border-radius: 1.5rem; border: 1px solid var(--sand);
-            padding: 2.5rem 2rem; box-shadow: 0 8px 30px rgba(65,45,21,.08);
-        }
-        .brand-logo {
-            font-family: 'Playfair Display', serif; font-size: 2rem;
-            color: var(--espresso); font-weight: 700; text-align: center; margin-bottom: .25rem;
-        }
-        .brand-sub { text-align: center; color: #6c757d; font-size: .875rem; margin-bottom: 2rem; }
-        .btn-espresso {
-            background: var(--espresso); color: #fff; font-weight: 600;
-            padding: .75rem; border-radius: .75rem;
-        }
-        .btn-espresso:hover { background: #2a1d0e; color: #fff; }
-        .form-control { border-radius: .75rem; padding: .625rem .875rem; border-color: var(--sand); }
-        .form-control:focus { border-color: var(--espresso); box-shadow: 0 0 0 .2rem rgba(65,45,21,.15); }
-        .form-label { font-weight: 500; font-size: .875rem; }
+        /* Register page specific */
+        body { background: var(--color-bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-6); }
+        .auth-card { max-width: 480px; width: 100%; background: var(--color-bg-white); border-radius: var(--radius-2xl); border: 1px solid var(--color-border); padding: var(--space-8) var(--space-6); box-shadow: var(--shadow-lg); }
+        .brand-logo { font-family: var(--font-serif); font-size: var(--text-3xl); color: var(--color-espresso); font-weight: var(--font-bold); text-align: center; margin-bottom: var(--space-1); }
+        .brand-sub { text-align: center; color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: var(--space-6); }
     </style>
 </head>
 <body>
@@ -48,54 +33,45 @@ old_clear();
         <div class="brand-sub">Daftarkan Coffee Shop Anda</div>
 
         <?php if ($error): ?>
-            <div class="alert alert-danger small"><?= e($error) ?></div>
+            <div class="alert alert-error"><?= e($error) ?></div>
         <?php endif; ?>
 
         <form action="/tokopi/actions/auth_action.php?action=register" method="POST">
             <?= csrf_field() ?>
-            <div class="mb-3">
-                <label class="form-label">Nama Toko</label>
-                <input type="text" name="nama_toko" class="form-control" required
-                       value="<?= e($old['nama_toko'] ?? '') ?>"
-                       placeholder="contoh: Kopi Senja">
+            <div class="form-group">
+                <label class="form-label" for="nama_toko">Nama Toko</label>
+                <input type="text" name="nama_toko" id="nama_toko" class="form-control" required value="<?= e($old['nama_toko'] ?? '') ?>" placeholder="contoh: Kopi Senja" autocomplete="off">
             </div>
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" name="email" class="form-control" required
-                       value="<?= e($old['email'] ?? '') ?>"
-                       placeholder="owner@email.com">
+            <div class="form-group">
+                <label class="form-label" for="email">Email</label>
+                <input type="email" name="email" id="email" class="form-control" required value="<?= e($old['email'] ?? '') ?>" placeholder="owner@email.com" autocomplete="email">
             </div>
-            <div class="mb-3">
-                <label class="form-label">No. HP</label>
-                <input type="text" name="no_hp" class="form-control"
-                       value="<?= e($old['no_hp'] ?? '') ?>"
-                       placeholder="08xxxxxxxxxx">
+            <div class="form-group">
+                <label class="form-label" for="no_hp">No. HP</label>
+                <input type="text" name="no_hp" id="no_hp" class="form-control" value="<?= e($old['no_hp'] ?? '') ?>" placeholder="08xxxxxxxxxx" autocomplete="tel">
             </div>
-            <div class="mb-3">
-                <label class="form-label">Alamat</label>
-                <textarea name="alamat" class="form-control" rows="2"
-                          placeholder="Alamat outlet pusat"><?= e($old['alamat'] ?? '') ?></textarea>
+            <div class="form-group">
+                <label class="form-label" for="alamat">Alamat</label>
+                <textarea name="alamat" id="alamat" class="form-control" rows="2" placeholder="Alamat outlet pusat"><?= e($old['alamat'] ?? '') ?></textarea>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Password</label>
-                <input type="password" name="password" class="form-control" required minlength="6"
-                       placeholder="minimal 6 karakter">
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" name="password" id="password" class="form-control" required minlength="6" placeholder="minimal 6 karakter" autocomplete="new-password">
             </div>
-            <div class="mb-3">
-                <label class="form-label">Konfirmasi Password</label>
-                <input type="password" name="password_confirm" class="form-control" required
-                       placeholder="ulangi password">
+            <div class="form-group">
+                <label class="form-label" for="password_confirm">Konfirmasi Password</label>
+                <input type="password" name="password_confirm" id="password_confirm" class="form-control" required placeholder="ulangi password" autocomplete="new-password">
             </div>
-            <button type="submit" class="btn btn-espresso w-100">
+            <button type="submit" class="btn btn-espresso btn-block btn-lg">
                 Daftar <i class="bi bi-arrow-right ms-1"></i>
             </button>
         </form>
 
-        <hr class="my-4">
+        <div class="divider"><span>atau</span></div>
 
         <div class="text-center small">
             Sudah punya akun?
-            <a href="/tokopi/login.php" class="fw-semibold text-decoration-none" style="color: var(--espresso);">
+            <a href="/tokopi/login.php" class="fw-semibold text-decoration-none" style="color: var(--color-espresso);">
                 Login di sini
             </a>
         </div>

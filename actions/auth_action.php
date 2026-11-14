@@ -5,6 +5,44 @@ require_once __DIR__ . '/../config/bootstrap.php';
 $action = $_GET['action'] ?? '';
 
 // ============================================
+// RATE LIMIT HELPER (file-based, simple)
+// ============================================
+function checkRateLimit(string $key, int $maxAttempts = 5, int $windowSeconds = 60): bool {
+    $file = sys_get_temp_dir() . '/ratelimit_' . md5($key) . '.json';
+    $now = time();
+
+    $data = ['attempts' => [], 'blocked_until' => 0];
+    if (file_exists($file)) {
+        $json = @file_get_contents($file);
+        if ($json) $data = json_decode($json, true) ?: $data;
+    }
+
+    // Check if blocked
+    if ($data['blocked_until'] > $now) {
+        return false;
+    }
+
+    // Clean old attempts
+    $data['attempts'] = array_filter($data['attempts'], fn($t) => $now - $t < $windowSeconds);
+
+    if (count($data['attempts']) >= $maxAttempts) {
+        $data['blocked_until'] = $now + $windowSeconds;
+        @file_put_contents($file, json_encode($data));
+        return false;
+    }
+
+    // Add attempt
+    $data['attempts'][] = $now;
+    @file_put_contents($file, json_encode($data));
+    return true;
+}
+
+function clearRateLimit(string $key): void {
+    $file = sys_get_temp_dir() . '/ratelimit_' . md5($key) . '.json';
+    @unlink($file);
+}
+
+// ============================================
 // REGISTER TENANT BARU
 // ============================================
 if ($action === 'register') {
@@ -16,6 +54,13 @@ if ($action === 'register') {
     $alamat    = trim($_POST['alamat'] ?? '');
     $password  = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
+
+    // Rate limit by IP
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    if (!checkRateLimit("register:$ip", 3, 300)) {
+        flash_set('error', 'Terlalu banyak percobaan. Coba lagi nanti.');
+        redirect('/tokopi/register.php');
+    }
 
     // Validasi
     $errors = [];
@@ -66,6 +111,7 @@ if ($action === 'register') {
 
         $pdo->commit();
 
+        clearRateLimit("register:$ip");
         flash_set('success', 'Registrasi berhasil! Silakan login.');
         redirect('/tokopi/login.php');
 
@@ -85,6 +131,14 @@ elseif ($action === 'login_owner') {
     $email    = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
+    // Rate limit by email + IP
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateKey = "login_owner:$email:$ip";
+    if (!checkRateLimit($rateKey, 5, 60)) {
+        flash_set('error', 'Terlalu banyak percobaan login. Tunggu 1 menit.');
+        redirect('/tokopi/login.php');
+    }
+
     $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role IN ('owner','manager','finance','gudang','barista') AND is_active = 1");
     $stmt->execute([$email]);
     $user = $stmt->fetch();
@@ -93,6 +147,10 @@ elseif ($action === 'login_owner') {
         flash_set('error', 'Email atau password salah.');
         redirect('/tokopi/login.php');
     }
+
+    // Success - clear rate limit, regenerate session
+    clearRateLimit($rateKey);
+    session_regenerate_id(true);
 
     // Set session
     $_SESSION['user_id']   = $user['id'];
@@ -115,6 +173,14 @@ elseif ($action === 'login_kasir') {
     $username = trim($_POST['username'] ?? '');
     $pin      = trim($_POST['pin'] ?? '');
 
+    // Rate limit by username + IP
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateKey = "login_kasir:$username:$ip";
+    if (!checkRateLimit($rateKey, 5, 60)) {
+        flash_set('error', 'Terlalu banyak percobaan login. Tunggu 1 menit.');
+        redirect('/tokopi/login.php');
+    }
+
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ? AND role = 'kasir' AND is_active = 1");
     $stmt->execute([$username]);
     $user = $stmt->fetch();
@@ -123,6 +189,10 @@ elseif ($action === 'login_kasir') {
         flash_set('error', 'Username atau PIN salah.');
         redirect('/tokopi/login.php');
     }
+
+    // Success - clear rate limit, regenerate session
+    clearRateLimit($rateKey);
+    session_regenerate_id(true);
 
     // Set session
     $_SESSION['user_id']   = $user['id'];

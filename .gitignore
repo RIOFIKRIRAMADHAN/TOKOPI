@@ -6,3 +6,17 @@
 test*.php
 /dev/
 /node_modules/
+
+# Debug & seed files (local only)
+_backfill*.php
+_debug_*.php
+_test_*.php
+_seed*.php
+biawak_jantan.php
+seed_*.php
+
+# Uploads (use symlink to external storage)
+/uploads/
+
+# Company folder (if not needed in repo)
+# /company/

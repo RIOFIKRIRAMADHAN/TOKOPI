@@ -22,335 +22,74 @@ if (current_outlet_id()) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link href="/tokopi/assets/css/app.css" rel="stylesheet">
     <style>
-        :root {
-            --espresso: #412D15;
-            --sand: #E1DCC9;
-            --sand-light: #F3F0E6;
-        }
+        /* Admin-specific overrides */
+        .sidebar { background: #000; }
+        .sidebar-brand { background: #000; }
+        .sidebar-brand small { color: rgba(255,255,255,.5); }
+        .sidebar-section { color: rgba(255,255,255,.4); }
+        .sidebar .nav-link { color: rgba(255,255,255,.75); }
+        .sidebar .nav-link:hover { background: rgba(255,255,255,.06); color: #fff; }
+        .sidebar .nav-link.active { background: var(--color-espresso); color: #fff; }
 
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: #FAF9F5;
-            margin: 0;
-        }
+        .topbar { background: var(--color-bg-white); border-bottom: 1px solid var(--color-border); }
+        .topbar .page-title { color: var(--color-espresso); }
+        .outlet-badge { background: var(--color-sand-light); color: var(--color-espresso); }
+        .user-avatar { background: var(--color-espresso); }
+        .user-name { color: var(--color-espresso); }
+        .user-role { color: var(--color-text-muted); }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5 {
-            font-family: 'Playfair Display', serif;
-            color: var(--espresso);
-        }
+        .content { padding: var(--space-6); }
 
-        .money {
-            font-variant-numeric: tabular-nums;
-            font-family: 'JetBrains Mono', monospace;
-        }
+        .btn-espresso { background: var(--color-espresso); color: #fff; }
+        .btn-espresso:hover { background: var(--color-espresso-dark); color: #fff; }
 
-        /* Sidebar */
-        .sidebar {
-            background: #000;
-            color: #fff;
-            width: 260px;
-            height: 100vh;
-            position: fixed;
-            top: 0;
-            left: 0;
-            padding: 1.25rem 0.875rem 2rem;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
+        .card { border-color: var(--color-border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm); }
+        .card-header { background: var(--color-bg-white); border-bottom: 1px solid var(--color-border); color: var(--color-espresso); }
 
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
+        .table thead th { color: var(--color-text-muted); border-bottom: 2px solid var(--color-border); }
+        .table-hover tbody tr:hover { background: var(--color-sand-50); }
 
-        .sidebar::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, .05);
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, .2);
-            border-radius: 3px;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, .35);
-        }
-
-        .sidebar-brand {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #fff;
-            padding: 0.5rem 1rem 1.25rem;
-            border-bottom: 1px solid rgba(255, 255, 255, .08);
-            margin-bottom: 1rem;
-            position: sticky;
-            top: -1.25rem;
-            background: #000;
-            z-index: 10;
-        }
-
-        .sidebar-brand small {
-            display: block;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-size: .7rem;
-            color: rgba(255, 255, 255, .5);
-            font-weight: 400;
-            letter-spacing: .05em;
-            text-transform: uppercase;
-            margin-top: .25rem;
-        }
-
-        .sidebar-section {
-            font-size: .7rem;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            color: rgba(255, 255, 255, .4);
-            padding: .75rem 1rem .25rem;
-            font-weight: 600;
-        }
-
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, .75);
-            border-radius: .5rem;
-            padding: .625rem 1rem;
-            font-size: .875rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: .625rem;
-            transition: .15s;
-        }
-
-        .sidebar .nav-link:hover {
-            background: rgba(255, 255, 255, .06);
-            color: #fff;
-        }
-
-        .sidebar .nav-link.active {
-            background: var(--espresso);
-            color: #fff;
-        }
-
-        .sidebar .nav-link i {
-            font-size: 1.05rem;
-        }
-
-        /* Main area */
-        .main-wrapper {
-            margin-left: 260px;
-            min-height: 100vh;
-        }
-
-        .topbar {
-            background: #fff;
-            border-bottom: 1px solid var(--sand);
-            padding: .875rem 1.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .topbar .page-title {
-            font-size: 1.125rem;
-            font-weight: 600;
-            color: var(--espresso);
-            margin: 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        .outlet-badge {
-            background: var(--sand-light);
-            color: var(--espresso);
-            padding: .35rem .875rem;
-            border-radius: 999px;
-            font-size: .8rem;
-            font-weight: 600;
-        }
-
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: .625rem;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: var(--espresso);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: .875rem;
-        }
-
-        .content {
-            padding: 1.75rem;
-        }
-
-        /* Card override */
-        .card {
-            border-color: var(--sand);
-            border-radius: 1rem;
-            box-shadow: 0 1px 3px rgba(65, 45, 21, .04);
-        }
-
-        .card-header {
-            background: #fff;
-            border-bottom: 1px solid var(--sand);
-            font-weight: 600;
-            color: var(--espresso);
-            padding: 1rem 1.25rem;
-            border-radius: 1rem 1rem 0 0 !important;
-        }
-
-        .btn-espresso {
-            background: var(--espresso);
-            color: #fff;
-            font-weight: 600;
-            border: none;
-            border-radius: .75rem;
-            padding: .5rem 1rem;
-        }
-
-        .btn-espresso:hover {
-            background: #2a1d0e;
-            color: #fff;
-        }
-
-        /* Table */
-        .table thead th {
-            font-size: .75rem;
-            text-transform: uppercase;
-            letter-spacing: .05em;
-            color: #6c757d;
-            font-weight: 600;
-            border-bottom: 2px solid var(--sand);
-        }
-
-        .table td {
-            vertical-align: middle;
-        }
-
-        /* ==========================================
-           MICRO-INTERACTIONS & ANIMATIONS
-           ========================================== */
-
-        /* 1. Tombol Melayang (Hover & Active) */
-        .btn {
-            transition: all 0.2s ease-in-out;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(65, 45, 21, 0.15);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-            box-shadow: none;
-        }
-
-        /* Khusus tombol outline agar tidak terlalu gelap */
-        .btn-outline-dark:hover,
-        .btn-outline-secondary:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        /* 2. Card Melayang & Shadow Halus */
-        .card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        /* Card yang ada di dalam tabel/list jangan melayang terlalu jauh */
-        .card:hover {
-            box-shadow: 0 8px 24px rgba(65, 45, 21, 0.08);
-        }
-
-        /* Efek hover khusus untuk Card Statistik/KPI di Dashboard */
-        .kpi-card:hover,
-        .col-md-3 .card:hover,
-        .col-md-4 .card:hover {
-            transform: translateY(-3px);
-        }
-
-        /* 3. Baris Tabel (Hover Highlight) */
-        .table-hover tbody tr {
-            transition: background-color 0.15s ease;
-        }
-
-        .table-hover tbody tr:hover {
-            background-color: #FAF9F5;
-            /* Warna sand sangat tipis */
-        }
-
-        /* 4. Sidebar Menu Item */
-        .sidebar .nav-link {
-            transition: all 0.2s ease;
-        }
-
-        .sidebar .nav-link:hover {
-            padding-left: 1.25rem;
-            /* Efek geser sedikit ke kanan */
-        }
-
-        /* 5. Animasi Fade-In saat halaman dimuat */
-
-
-        /* 6. Animasi Spinner pada Tombol Submit */
-        .btn .spinner-border {
-            width: 1rem;
-            height: 1rem;
-            margin-right: 0.5rem;
-        }
-
-        /* 7. Efek Fokus pada Form Input */
-        .form-control,
-        .form-select {
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        /* 8. Badge Status Berkedip Halus (Pulse) */
+        /* Badge pulse */
         @keyframes softPulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(65, 45, 21, 0.4);
-            }
-
-            70% {
-                box-shadow: 0 0 0 6px rgba(65, 45, 21, 0);
-            }
-
-            100% {
-                box-shadow: 0 0 0 0 rgba(65, 45, 21, 0);
-            }
+            0% { box-shadow: 0 0 0 0 rgba(45,27,10,0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(45,27,10,0); }
+            100% { box-shadow: 0 0 0 0 rgba(45,27,10,0); }
         }
+        .badge.bg-success { animation: softPulse 2s infinite; }
 
-        .badge.bg-success {
-            animation: softPulse 2s infinite;
+        /* Sidebar toggle for mobile */
+        .sidebar-toggle { display: none; position: fixed; top: var(--space-4); left: var(--space-4); z-index: calc(var(--z-fixed) + 1); background: var(--color-espresso); color: #fff; border: none; border-radius: var(--radius-md); width: 44px; height: 44px; box-shadow: var(--shadow-lg); }
+
+        .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: calc(var(--z-fixed) - 1); opacity: 0; visibility: hidden; transition: all var(--transition-base); }
+
+        @media (max-width: 991.98px) {
+            .sidebar { transform: translateX(-100%); transition: transform var(--transition-base); }
+            .sidebar.open { transform: translateX(0); }
+            .main-wrapper { margin-left: 0; }
+            .sidebar-toggle { display: flex !important; align-items: center; justify-content: center; }
+            .sidebar-backdrop.open { opacity: 1; visibility: visible; }
         }
     </style>
 </head>
 
 <body>
 
-    <aside class="sidebar">
+    <!-- Mobile Sidebar Toggle -->
+    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka Menu" aria-expanded="false">
+        <i class="bi bi-list" style="font-size: 1.25rem;"></i>
+    </button>
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand d-flex align-items-center gap-2">
-            <div style="width: 36px; height: 36px; background: var(--sand); color: var(--espresso); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 36px; height: 36px; background: var(--color-sand); color: var(--color-espresso); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
                 <i class="bi bi-cup-hot-fill" style="font-size: 1.2rem;"></i>
             </div>
             <div style="line-height: 1;">
-                <span style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px;">Tokopi</span>
-                <small style="font-size: 0.6rem; display: block; margin-top: 4px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px;">Coffee ERP</small>
+                <span style="font-family: var(--font-serif); font-size: var(--text-xl); font-weight: var(--font-bold); letter-spacing: 0.5px;">Tokopi</span>
+                <small style="font-size: var(--text-xs); display: block; margin-top: 4px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px;">Coffee ERP</small>
             </div>
         </div>
 
@@ -464,19 +203,48 @@ if (current_outlet_id()) {
                         <?= strtoupper(substr(current_user_name(), 0, 1)) ?>
                     </div>
                     <div>
-                        <div style="font-size:.8rem; font-weight:600; color: var(--espresso);">
-                            <?= e(current_user_name()) ?>
-                        </div>
-                        <div style="font-size:.7rem; color:#6c757d; text-transform:uppercase; letter-spacing:.05em;">
-                            <?= e(current_user_role()) ?>
-                        </div>
+                        <div class="user-name"><?= e(current_user_name()) ?></div>
+                        <div class="user-role"><?= e(current_user_role()) ?></div>
                     </div>
                 </div>
 
-                <a href="/tokopi/logout.php" class="btn btn-sm btn-outline-dark">
+                <a href="/tokopi/logout.php" class="btn btn-sm btn-outline-espresso">
                     <i class="bi bi-box-arrow-right"></i>
                 </a>
             </div>
         </div>
 
         <div class="content">
+
+<script>
+    // Sidebar mobile toggle
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebarToggle');
+    const backdrop = document.getElementById('sidebarBackdrop');
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        backdrop.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.innerHTML = '<i class="bi bi-x" style="font-size: 1.25rem;"></i>';
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.innerHTML = '<i class="bi bi-list" style="font-size: 1.25rem;"></i>';
+    }
+
+    toggle.addEventListener('click', () => {
+        if (sidebar.classList.contains('open')) closeSidebar();
+        else openSidebar();
+    });
+
+    backdrop.addEventListener('click', closeSidebar);
+
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar();
+    });
+</script>

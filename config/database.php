@@ -40,5 +40,7 @@ try {
 
     date_default_timezone_set(env('APP_TIMEZONE', 'Asia/Jakarta'));
 } catch (PDOException $e) {
-    die("Koneksi database gagal: " . $e->getMessage());
+    // Log error untuk debugging, tampilkan pesan generik ke user
+    error_log("[DB] Connection failed: " . $e->getMessage());
+    die("Koneksi database gagal. Silakan hubungi administrator.");
 }

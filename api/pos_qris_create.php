@@ -121,10 +121,11 @@ try {
         throw new Exception('Ada varian yang tidak valid atau sudah nonaktif.');
     }
 
-    // 2. Hitung subtotal + HPP
+    // 2. Hitung subtotal + HPP + kumpulkan kebutuhan stok
     $subtotal = 0;
     $cost_total = 0;
     $lines = [];
+    $stock_needs = []; // ingredient_id => total_qty_needed
 
     foreach ($items as $it) {
         $vid = (int)$it['variant_id'];
@@ -153,15 +154,27 @@ try {
             $yield_qty = max((float)$recipe['yield_qty'], 1);
 
             foreach ($stmt->fetchAll() as $ri) {
-                $bahan_qty = ((float)$ri['qty'] / $yield_qty);
+                $bahan_qty = ((float)$ri['qty'] / $yield_qty) * $qty; // total untuk qty ini
                 $bahan_cost = $bahan_qty * (float)$ri['avg_cost'];
-                $unit_cost += $bahan_cost;
+                $unit_cost += $bahan_cost / $qty; // per unit
+
+                // Akumulasikan kebutuhan stok per bahan
+                $iid = (int)$ri['ingredient_id'];
+                if (!isset($stock_needs[$iid])) {
+                    $stock_needs[$iid] = [
+                        'nama' => $ri['nama'],
+                        'unit' => $ri['unit'],
+                        'qty' => 0,
+                    ];
+                }
+                $stock_needs[$iid]['qty'] += $bahan_qty;
+
                 $breakdown[] = [
-                    'ingredient_id' => (int)$ri['ingredient_id'],
+                    'ingredient_id' => $iid,
                     'nama'          => $ri['nama'],
-                    'qty'           => $bahan_qty,
+                    'qty'           => $bahan_qty / $qty, // per unit
                     'unit'          => $ri['unit'],
-                    'cost'          => $bahan_cost,
+                    'cost'          => $bahan_cost / $qty, // per unit
                 ];
             }
         } elseif ((float)$v['hpp_manual'] > 0) {
@@ -185,36 +198,61 @@ try {
 
     $grand_total = $subtotal;
 
-        // ============================================
-    // CEK STOK — hard block
     // ============================================
-    $stok_error = [];
-    foreach ($lines as $l) {
-        foreach ($l['cost_breakdown'] as $bahan) {
-            $qty_needed = $bahan['qty'] * $l['qty'];
+    // CEK STOK ATOMIC — SELECT FOR UPDATE di dalam transaksi
+    // ============================================
+    if (!empty($stock_needs)) {
+        $ingredient_ids = array_keys($stock_needs);
+        $placeholders = implode(',', array_fill(0, count($ingredient_ids), '?'));
 
-            $stmt = $pdo->prepare("
-                SELECT COALESCE(qty, 0) FROM stocks
-                WHERE outlet_id = ? AND ingredient_id = ?
-            ");
-            $stmt->execute([$outlet_id, $bahan['ingredient_id']]);
-            $current = (float)$stmt->fetchColumn();
+        // Lock rows untuk mencegah race condition
+        $stmt = $pdo->prepare("
+            SELECT ingredient_id, COALESCE(qty, 0) AS current_qty
+            FROM stocks
+            WHERE outlet_id = ? AND ingredient_id IN ($placeholders)
+            FOR UPDATE
+        ");
+        $params = array_merge([$outlet_id], $ingredient_ids);
+        $stmt->execute($params);
+        $current_stocks = [];
+        foreach ($stmt->fetchAll() as $row) {
+            $current_stocks[(int)$row['ingredient_id']] = (float)$row['current_qty'];
+        }
 
-            if ($current < $qty_needed) {
+        // Cek kecukupan
+        $stok_error = [];
+        foreach ($stock_needs as $iid => $need) {
+            $available = $current_stocks[$iid] ?? 0;
+            if ($available < $need['qty']) {
                 $stok_error[] = sprintf(
                     '%s: butuh %s %s, tersedia %s %s',
-                    $bahan['nama'],
-                    number_format($qty_needed, 2, ',', '.'),
-                    $bahan['unit'],
-                    number_format($current, 2, ',', '.'),
-                    $bahan['unit']
+                    $need['nama'],
+                    number_format($need['qty'], 2, ',', '.'),
+                    $need['unit'],
+                    number_format($available, 2, ',', '.'),
+                    $need['unit']
                 );
             }
         }
-    }
 
-    if (!empty($stok_error)) {
-        throw new Exception('Stok tidak cukup: ' . implode('; ', array_unique($stok_error)));
+        if (!empty($stok_error)) {
+            throw new Exception('Stok tidak cukup: ' . implode('; ', array_unique($stok_error)));
+        }
+
+        // Kurangi stok (atomic decrement)
+        foreach ($stock_needs as $iid => $need) {
+            $stmt = $pdo->prepare("
+                UPDATE stocks SET qty = qty - ? WHERE outlet_id = ? AND ingredient_id = ?
+            ");
+            $stmt->execute([$need['qty'], $outlet_id, $iid]);
+
+            // Catat stock movement
+            $stmt = $pdo->prepare("
+                INSERT INTO stock_movements (outlet_id, ingredient_id, type, qty, reference_type, reference_id, note)
+                VALUES (?, ?, 'OUT', ?, 'ORDER', 0, ?)
+            ");
+            $stmt->execute([$outlet_id, $iid, $need['qty'], "Pesanan QRIS (pending)"]);
+        }
     }
 
     // 3. Generate order_no
@@ -254,6 +292,18 @@ try {
         $client_request_id
     ]);
     $order_id = (int)$pdo->lastInsertId();
+
+    // Update stock movements dengan order_id yang benar
+    if (!empty($stock_needs)) {
+        foreach ($stock_needs as $iid => $need) {
+            $stmt = $pdo->prepare("
+                UPDATE stock_movements SET reference_id = ?
+                WHERE outlet_id = ? AND ingredient_id = ? AND reference_type = 'ORDER' AND reference_id = 0
+                ORDER BY id DESC LIMIT 1
+            ");
+            $stmt->execute([$order_id, $outlet_id, $iid]);
+        }
+    }
 
     // 5. Insert order items
     $stmt_item = $pdo->prepare("

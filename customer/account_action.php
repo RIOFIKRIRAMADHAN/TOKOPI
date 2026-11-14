@@ -7,23 +7,55 @@ require_once __DIR__ . '/../config/bootstrap.php';
 
 $action = $_GET['action'] ?? '';
 
-// Ambil tenant_id (Bisa dari outlet meja, atau fallback ke tenant pertama jika dari luar)
+// ============================================
+// RATE LIMIT HELPER
+// ============================================
+function checkRateLimit(string $key, int $maxAttempts = 5, int $windowSeconds = 60): bool {
+    $file = sys_get_temp_dir() . '/ratelimit_' . md5($key) . '.json';
+    $now = time();
+
+    $data = ['attempts' => [], 'blocked_until' => 0];
+    if (file_exists($file)) {
+        $json = @file_get_contents($file);
+        if ($json) $data = json_decode($json, true) ?: $data;
+    }
+
+    if ($data['blocked_until'] > $now) return false;
+
+    $data['attempts'] = array_filter($data['attempts'], fn($t) => $now - $t < $windowSeconds);
+
+    if (count($data['attempts']) >= $maxAttempts) {
+        $data['blocked_until'] = $now + $windowSeconds;
+        @file_put_contents($file, json_encode($data));
+        return false;
+    }
+
+    $data['attempts'][] = $now;
+    @file_put_contents($file, json_encode($data));
+    return true;
+}
+
+function clearRateLimit(string $key): void {
+    $file = sys_get_temp_dir() . '/ratelimit_' . md5($key) . '.json';
+    @unlink($file);
+}
+
+// ============================================
+// TENANT ID VALIDATION (NO FALLBACK)
+// ============================================
 $outlet_id = (int)($_SESSION['customer_outlet_id'] ?? 0);
 $tenant_id = 0;
 
 if ($outlet_id > 0) {
-    $stmt = $pdo->prepare("SELECT tenant_id FROM outlets WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT tenant_id FROM outlets WHERE id = ? AND is_active = 1");
     $stmt->execute([$outlet_id]);
-    $tenant_id = (int)$stmt->fetchColumn();
-} else {
-    // Fallback: Ambil tenant pertama (karena biasanya 1 coffee shop utama)
-    $stmt = $pdo->query("SELECT id FROM tenants ORDER BY id LIMIT 1");
     $tenant_id = (int)$stmt->fetchColumn();
 }
 
+// TIDAK ADA FALLBACK KE TENANT PERTAMA - ini celah keamanan multi-tenant
 if (!$tenant_id) {
-    flash_set('error', 'Outlet / Tenant tidak valid.');
-    redirect('/tokopi/customer/login.php');
+    flash_set('error', 'Sesi tidak valid. Silakan scan QR meja ulang.');
+    redirect('/tokopi/customer/t.php');
 }
 
 // ============================================
@@ -31,6 +63,12 @@ if (!$tenant_id) {
 // ============================================
 if ($action === 'register') {
     verify_csrf();
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    if (!checkRateLimit("cust_register:$ip", 3, 300)) {
+        flash_set('error', 'Terlalu banyak percobaan. Coba lagi nanti.');
+        redirect('/tokopi/customer/register.php');
+    }
 
     $nama             = trim($_POST['nama'] ?? '');
     $email            = strtolower(trim($_POST['email'] ?? ''));
@@ -80,13 +118,16 @@ if ($action === 'register') {
         ]);
         $customer_id = (int)$pdo->lastInsertId();
 
-        // Auto-login
+        // Auto-login dengan session regeneration
+        session_regenerate_id(true);
+        clearRateLimit("cust_register:$ip");
+
         $_SESSION['customer_account_id']    = $customer_id;
         $_SESSION['customer_account_name']  = $nama;
         $_SESSION['customer_account_email'] = $email;
 
         flash_set('success', 'Selamat datang, ' . $nama . '! Akun berhasil dibuat.');
-        
+
         // REDIRECT PINTAR
         if (!empty($_SESSION['customer_table_id'])) {
             redirect('/tokopi/customer/home.php');
@@ -109,6 +150,14 @@ elseif ($action === 'login') {
     $email    = strtolower(trim($_POST['email'] ?? ''));
     $password = $_POST['password'] ?? '';
 
+    // Rate limit by email + IP
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $rateKey = "cust_login:$email:$ip";
+    if (!checkRateLimit($rateKey, 5, 60)) {
+        flash_set('error', 'Terlalu banyak percobaan login. Tunggu 1 menit.');
+        redirect('/tokopi/customer/login.php');
+    }
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
         flash_set('error', 'Email dan password wajib diisi.');
         redirect('/tokopi/customer/login.php');
@@ -127,12 +176,16 @@ elseif ($action === 'login') {
         redirect('/tokopi/customer/login.php');
     }
 
+    // Success - clear rate limit, regenerate session
+    clearRateLimit($rateKey);
+    session_regenerate_id(true);
+
     $_SESSION['customer_account_id']    = (int)$customer['id'];
     $_SESSION['customer_account_name']  = $customer['nama'];
     $_SESSION['customer_account_email'] = $customer['email'];
 
     flash_set('success', 'Selamat datang kembali, ' . $customer['nama'] . '!');
-    
+
     // REDIRECT PINTAR
     if (!empty($_SESSION['customer_table_id'])) {
         redirect('/tokopi/customer/home.php');
