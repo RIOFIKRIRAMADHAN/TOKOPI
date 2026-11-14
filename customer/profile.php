@@ -26,69 +26,329 @@ if ($is_logged_in) {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#2D1B0A">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#412D15">
     <title>Profil · Tokopi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <link href="/tokopi/assets/css/app.css" rel="stylesheet">
     <style>
-        /* Profile-specific tier badges */
-        .tier-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: var(--font-extrabold); letter-spacing: 0.05em; text-transform: uppercase; }
-        .tier-BRONZE { background: #cd7f32; color: #fff; }
-        .tier-SILVER { background: #c0c0c0; color: #333; }
-        .tier-GOLD { background: #FFD700; color: #6b4a00; }
+        :root {
+            --espresso: #412D15;
+            --sand: #E1DCC9;
+            --sand-light: #F3F0E6;
+            --bg: #EDEAE3;
+            --text-muted: #8a8478;
+            --red: #A83232;
+            --green: #2E7D5B;
+            --gold: #B8860B;
+        }
 
-        /* Profile header avatar */
-        .profile-avatar { width: 90px; height: 90px; background: var(--color-sand); color: var(--color-espresso); border-radius: var(--radius-circle); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto var(--space-4); font-weight: var(--font-extrabold); font-family: var(--font-serif); position: relative; z-index: 1; overflow: hidden; border: 3px solid rgba(255,255,255,.2); }
-        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        /* Stats row */
-        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin: calc(-1.5 * var(--space-5)) var(--space-5) var(--space-5); position: relative; z-index: 2; }
-        .stat-card { background: var(--color-bg-white); border-radius: var(--radius-xl); padding: var(--space-4) var(--space-2); text-align: center; box-shadow: var(--shadow-md); }
-        .stat-value { font-family: var(--font-mono); font-size: var(--text-xl); font-weight: var(--font-extrabold); color: var(--color-espresso); line-height: 1; margin-bottom: var(--space-1); }
-        .stat-label { font-size: var(--text-xs); color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: var(--font-semibold); }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
 
-        /* Menu list items */
-        .menu-list { background: var(--color-bg-white); margin: var(--space-4) var(--space-5); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--color-border); }
-        .menu-item-link { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); text-decoration: none; color: inherit; transition: background var(--transition-fast); }
-        .menu-item-link:last-child { border-bottom: none; }
-        .menu-item-link:hover { background: var(--color-bg-alt); }
-        .menu-item-link i:first-child { font-size: 1.2rem; color: var(--color-espresso); width: 24px; text-align: center; }
-        .menu-item-link .label { flex: 1; font-size: var(--text-base); font-weight: var(--font-semibold); color: var(--color-espresso); }
-        .menu-item-link .arrow { color: var(--color-text-muted); font-size: 1rem; }
+        /* HEADER LOGGED IN */
+        .profile-header {
+            background: linear-gradient(160deg, #1a1a1a 0%, #2a1d0e 60%, #3d2a15 100%);
+            color: #fff;
+            padding: 40px 22px 50px;
+            text-align: center;
+            border-radius: 0 0 28px 28px;
+            position: relative;
+            overflow: hidden;
+        }
 
-        /* Logout button */
-        .logout-btn { display: block; margin: var(--space-5); padding: var(--space-3) var(--space-5); background: transparent; border: 1.5px solid var(--color-danger); color: var(--color-danger); border-radius: var(--radius-lg); font-weight: var(--font-bold); font-size: var(--text-base); text-align: center; text-decoration: none; transition: all var(--transition-fast); }
-        .logout-btn:active { background: var(--color-danger); color: #fff; }
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(225, 220, 201, .15) 0%, transparent 70%);
+            border-radius: 50%;
+        }
 
-        /* Guest mode */
-        .guest-card { margin: var(--space-5); padding: var(--space-8) var(--space-6); background: var(--color-bg-white); border-radius: var(--radius-2xl); text-align: center; box-shadow: var(--shadow-md); border: 1px solid var(--color-border); }
-        .guest-icon { font-size: 3rem; margin-bottom: var(--space-3); }
-        .guest-title { font-family: var(--font-serif); font-size: var(--text-xl); color: var(--color-espresso); margin: 0 0 var(--space-2); font-weight: var(--font-bold); }
-        .guest-desc { font-size: var(--text-base); color: var(--color-text-muted); line-height: 1.55; margin-bottom: var(--space-5); }
+        .avatar {
+            width: 90px;
+            height: 90px;
+            background: var(--sand);
+            color: var(--espresso);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 16px;
+            font-weight: 800;
+            font-family: 'Playfair Display', serif;
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
 
-        .btn-primary-c { display: block; width: 100%; padding: var(--space-3) var(--space-5); background: var(--color-espresso); color: #fff; border: none; border-radius: var(--radius-lg); font-weight: var(--font-bold); font-size: var(--text-base); text-decoration: none; text-align: center; margin-bottom: var(--space-3); }
-        .btn-secondary-c { display: block; width: 100%; padding: var(--space-3) var(--space-5); background: transparent; color: var(--color-espresso); border: 1.5px solid var(--color-sand); border-radius: var(--radius-lg); font-weight: var(--font-bold); font-size: var(--text-base); text-decoration: none; text-align: center; }
+        .profile-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+            position: relative;
+            z-index: 1;
+        }
 
-        /* Profile header */
-        .profile-header { background: linear-gradient(160deg, #1a1a1a 0%, #2a1d0e 60%, #3d2a15 100%); color: #fff; padding: var(--space-8) var(--space-5) var(--space-10); text-align: center; border-radius: 0 0 var(--radius-2xl) var(--radius-2xl); position: relative; overflow: hidden; }
-        .profile-header::before { content: ''; position: absolute; top: -80px; right: -80px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(225,220,201,.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
-        .profile-name { font-family: var(--font-serif); font-size: var(--text-2xl); font-weight: var(--font-bold); margin-bottom: var(--space-1); position: relative; z-index: 1; }
-        .profile-email { font-size: var(--text-sm); color: var(--color-sand); position: relative; z-index: 1; }
+        .profile-email {
+            font-size: 0.78rem;
+            color: var(--sand);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* STATS */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: -25px 20px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px 8px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(65, 45, 21, .08);
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--espresso);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        /* TIER BADGE */
+        .tier-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .tier-BRONZE {
+            background: #cd7f32;
+            color: #fff;
+        }
+
+        .tier-SILVER {
+            background: #c0c0c0;
+            color: #333;
+        }
+
+        .tier-GOLD {
+            background: #FFD700;
+            color: #6b4a00;
+        }
+
+        /* MENU LIST */
+        .menu-list {
+            background: #fff;
+            margin: 16px 20px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 1px 6px rgba(65, 45, 21, .04);
+        }
+
+        .menu-item-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            border-bottom: 1px solid #f5f2ea;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .menu-item-link:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item-link i:first-child {
+            font-size: 1.2rem;
+            color: var(--espresso);
+            width: 24px;
+            text-align: center;
+        }
+
+        .menu-item-link .label {
+            flex: 1;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--espresso);
+        }
+
+        .menu-item-link .arrow {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        /* LOGOUT BTN */
+        .logout-btn {
+            display: block;
+            margin: 20px;
+            padding: 14px;
+            background: transparent;
+            border: 1.5px solid var(--red);
+            color: var(--red);
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            text-align: center;
+            text-decoration: none;
+            transition: 0.15s;
+        }
+
+        .logout-btn:active {
+            background: var(--red);
+            color: #fff;
+        }
+
+        /* GUEST MODE */
+        .guest-card {
+            margin: 20px;
+            padding: 30px 24px;
+            background: #fff;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(65, 45, 21, .08);
+        }
+
+        .guest-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        .guest-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--espresso);
+            margin: 0 0 8px;
+            font-weight: 700;
+        }
+
+        .guest-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+            margin-bottom: 20px;
+        }
+
+        .btn-primary-c {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: var(--espresso);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .btn-secondary-c {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: transparent;
+            color: var(--espresso);
+            border: 1.5px solid var(--sand);
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 68px;
+            background: #fff;
+            border-top: 1px solid #f5f2ea;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(65, 45, 21, .06);
+        }
+
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 6px 0;
+        }
+
+        .nav-item i {
+            display: block;
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+
+        .nav-item.active {
+            color: var(--espresso);
+        }
     </style>
 </head>
 
-<body class="customer-layout">
+<body>
 
     <?php if ($is_logged_in): ?>
 
         <!-- PROFILE HEADER -->
         <div class="profile-header">
-            <div class="profile-avatar">
+            <div class="avatar">
                 <?php if (!empty($customer['avatar_path'])): ?>
-                    <img src="/tokopi/<?= e($customer['avatar_path']) ?>?t=<?= time() ?>" alt="Avatar">
+                    <img src="/tokopi/<?= e($customer['avatar_path']) ?>?t=<?= time() ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
                 <?php else: ?>
                     <?= strtoupper(substr($customer_name, 0, 1)) ?>
                 <?php endif; ?>
@@ -111,7 +371,7 @@ if ($is_logged_in) {
                 <div class="stat-label">Order</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" style="font-size:var(--text-base);">Rp <?= number_format((float)$customer['total_spent'] / 1000, 0, ',', '.') ?>k</div>
+                <div class="stat-value" style="font-size:0.9rem;">Rp <?= number_format((float)$customer['total_spent'] / 1000, 0, ',', '.') ?>k</div>
                 <div class="stat-label">Total Belanja</div>
             </div>
         </div>
@@ -149,7 +409,7 @@ if ($is_logged_in) {
         <div class="menu-list">
             <div class="menu-item-link" style="cursor:default;">
                 <i class="bi bi-geo-alt"></i>
-                <span class="label" style="font-size:var(--text-sm); font-weight:var(--font-medium);">
+                <span class="label" style="font-size:0.8rem; font-weight:500;">
                     Meja: <strong><?= e($table_nama) ?></strong><br>
                     Outlet: <strong><?= e($outlet_nama) ?></strong>
                 </span>
@@ -172,8 +432,8 @@ if ($is_logged_in) {
     <?php else: ?>
 
         <!-- GUEST MODE -->
-        <div class="profile-header" style="padding-bottom:var(--space-12);">
-            <div class="profile-avatar">👤</div>
+        <div class="profile-header" style="padding-bottom:60px;">
+            <div class="avatar">👤</div>
             <div class="profile-name">Pelanggan Tamu</div>
             <div class="profile-email">Login untuk dapat poin & reward</div>
         </div>
@@ -197,7 +457,7 @@ if ($is_logged_in) {
         <div class="menu-list">
             <div class="menu-item-link" style="cursor:default;">
                 <i class="bi bi-geo-alt"></i>
-                <span class="label" style="font-size:var(--text-sm); font-weight:var(--font-medium);">
+                <span class="label" style="font-size:0.8rem; font-weight:500;">
                     Meja: <strong><?= e($table_nama) ?></strong><br>
                     Outlet: <strong><?= e($outlet_nama) ?></strong>
                 </span>
@@ -221,10 +481,9 @@ if ($is_logged_in) {
             <i class="bi bi-person"></i>Profile
         </a>
 
+
     </div>
 
-    <script src="/tokopi/assets/js/cart.js"></script>
-    <script src="/tokopi/assets/js/ui.js"></script>
 </body>
 
 </html>
