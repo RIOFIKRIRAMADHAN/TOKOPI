@@ -20,14 +20,14 @@ $success = flash_get('success');
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
     <link href="/tokopi/assets/css/app.css" rel="stylesheet">
     <style>
-        /* Login page specific */
+        /* Login page specific - light theme like company pages */
         body { background: var(--color-bg-alt); min-height: 100vh; }
         .login-wrapper { display: flex; min-height: 100vh; }
 
-        /* LEFT: VISUAL */
+        /* LEFT: VISUAL - Light theme */
         .login-visual {
             flex: 1;
-            background: linear-gradient(135deg, #1a1a1a 0%, var(--color-espresso) 100%);
+            background: linear-gradient(135deg, var(--color-espresso) 0%, var(--color-espresso-dark) 100%);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             padding: var(--space-10); color: var(--color-text-on-dark);
             position: relative; overflow: hidden;
