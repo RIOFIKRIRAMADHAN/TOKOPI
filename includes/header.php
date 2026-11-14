@@ -25,7 +25,16 @@ if (current_outlet_id()) {
     <link href="/tokopi/assets/css/app.css" rel="stylesheet">
     <style>
         /* Admin-specific overrides */
-        .sidebar { background: #000; }
+        .sidebar {
+            background: #000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            z-index: var(--z-fixed);
+            overflow-y: auto;
+        }
         .sidebar-brand { background: #000; }
         .sidebar-brand small { color: rgba(255,255,255,.5); }
         .sidebar-section { color: rgba(255,255,255,.4); }
@@ -33,12 +42,76 @@ if (current_outlet_id()) {
         .sidebar .nav-link:hover { background: rgba(255,255,255,.06); color: #fff; }
         .sidebar .nav-link.active { background: var(--color-espresso); color: #fff; }
 
-        .topbar { background: var(--color-bg-white); border-bottom: 1px solid var(--color-border); }
-        .topbar .page-title { color: var(--color-espresso); }
-        .outlet-badge { background: var(--color-sand-light); color: var(--color-espresso); }
-        .user-avatar { background: var(--color-espresso); }
-        .user-name { color: var(--color-espresso); }
-        .user-role { color: var(--color-text-muted); }
+        .main-wrapper {
+            margin-left: var(--sidebar-width);
+            width: calc(100% - var(--sidebar-width));
+            min-height: 100vh;
+            background: #FAF9F5;
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid var(--sand);
+            padding: 0.875rem 1.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .topbar .page-title {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-size: 1.125rem !important;
+            font-weight: 600;
+            color: var(--espresso);
+            margin: 0;
+        }
+
+        .outlet-badge {
+            background: var(--sand-light);
+            color: var(--espresso);
+            padding: .35rem .875rem;
+            border-radius: 999px;
+            font-size: .8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: .625rem;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--espresso);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: .875rem;
+        }
+
+        .user-name {
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--espresso);
+        }
+
+        .user-role {
+            font-size: .7rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
 
         .content { padding: var(--space-6); }
 
@@ -59,27 +132,66 @@ if (current_outlet_id()) {
         }
         .badge.bg-success { animation: softPulse 2s infinite; }
 
-        /* Sidebar toggle for mobile */
-        .sidebar-toggle { display: none; position: fixed; top: var(--space-4); left: var(--space-4); z-index: calc(var(--z-fixed) + 1); background: var(--color-espresso); color: #fff; border: none; border-radius: var(--radius-md); width: 44px; height: 44px; box-shadow: var(--shadow-lg); }
+        /* Sidebar toggle for mobile - now inside topbar */
+        .sidebar-toggle { display: none; background: var(--color-espresso); color: #fff; border: none; border-radius: var(--radius-md); width: 44px; height: 44px; box-shadow: var(--shadow-md); align-items: center; justify-content: center; }
 
         .sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: calc(var(--z-fixed) - 1); opacity: 0; visibility: hidden; transition: all var(--transition-base); }
 
         @media (max-width: 991.98px) {
-            .sidebar { transform: translateX(-100%); transition: transform var(--transition-base); }
-            .sidebar.open { transform: translateX(0); }
-            .main-wrapper { margin-left: 0; }
-            .sidebar-toggle { display: flex !important; align-items: center; justify-content: center; }
-            .sidebar-backdrop.open { opacity: 1; visibility: visible; }
+            /* 1. Lepas margin sidebar di mobile */
+            .main-wrapper {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+
+            /* 2. Sembunyikan sidebar asli di mobile (karena udah ada hamburger) */
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            /* 3. Benerin Topbar di mobile biar ga meluber */
+            .topbar {
+                padding: 0.75rem 1rem !important;
+                flex-wrap: wrap !important;
+                gap: 10px;
+            }
+
+            /* 4. Kecilin atau sembunyikan info user (Rayhan Owner) di mobile biar rapi */
+            .topbar .user-badge .text-start {
+                display: none !important; /* Menyembunyikan teks, sisakan foto/avatar */
+            }
+
+            .topbar .page-title {
+                font-size: 1rem !important;
+            }
+        }
+
+        /* Modal backdrop fix - gelap transparan + blur */
+        .modal-backdrop.show {
+            opacity: 1 !important;
+            background-color: rgba(26, 26, 26, 0.4) !important;
+            backdrop-filter: blur(6px) !important;
+            -webkit-backdrop-filter: blur(6px) !important;
+        }
+        .modal-content {
+            background-color: #ffffff !important;
+            border: none !important;
+            border-radius: 16px !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+        }
+        .modal {
+            background: transparent !important;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Mobile Sidebar Toggle -->
-    <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka Menu" aria-expanded="false">
-        <i class="bi bi-list" style="font-size: 1.25rem;"></i>
-    </button>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
     <aside class="sidebar" id="sidebar">
@@ -147,6 +259,9 @@ if (current_outlet_id()) {
                 <a class="nav-link <?= $active_menu === 'tables' ? 'active' : '' ?>" href="/tokopi/views/tables.php">
                     <i class="bi bi-grid-3x3"></i> Meja & QR
                 </a>
+                <a class="nav-link <?= $active_menu === 'posts' ? 'active' : '' ?>" href="/tokopi/views/posts.php">
+                    <i class="bi bi-journal-text"></i> Artikel & Blog
+                </a>
             <?php endif; ?>
 
             <?php if (in_array(current_user_role(), ['owner', 'manager', 'finance'])): ?>
@@ -186,6 +301,10 @@ if (current_outlet_id()) {
 
     <div class="main-wrapper">
         <div class="topbar">
+            <!-- Mobile Sidebar Toggle -->
+            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Buka Menu" aria-expanded="false">
+                <i class="bi bi-list" style="font-size: 1.25rem;"></i>
+            </button>
             <h1 class="page-title"><?= e($page_title) ?></h1>
             <div class="d-flex align-items-center gap-3">
                 <?php if ($outlet_info): ?>

@@ -165,278 +165,134 @@ require_once __DIR__ . '/../includes/header.php';
     .pos-wrapper {
         display: grid;
         grid-template-columns: 1fr 400px;
-        gap: 1rem;
-        height: calc(100vh - 130px);
+        gap: var(--space-4);
+        height: calc(100vh - var(--topbar-height) - (var(--space-4) * 2));
     }
 
-    @media (max-width: 992px) {
-        .pos-wrapper {
-            grid-template-columns: 1fr;
-            height: auto;
-        }
-    }
-
+    /* PANEL KIRI: PRODUK */
     .product-panel {
         overflow-y: auto;
-        padding-right: .5rem;
-    }
-
-    .cart-panel {
-        background: #fff;
-        border: 1px solid var(--sand);
-        border-radius: 1rem;
-        display: flex;
-        flex-direction: column;
-        max-height: 100%;
-    }
-
-    .cart-header {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid var(--sand);
-    }
-
-    .cart-body {
-        flex: 1;
-        overflow-y: auto;
-        padding: .5rem 1.25rem;
-    }
-
-    .cart-footer {
-        padding: 1rem 1.25rem;
-        border-top: 1px solid var(--sand);
-        background: #FAF9F5;
-        border-radius: 0 0 1rem 1rem;
+        padding-right: 0.5rem;
     }
 
     .category-pills {
         display: flex;
-        gap: .5rem;
+        gap: 0.5rem;
         overflow-x: auto;
-        padding-bottom: .5rem;
+        padding-bottom: 0.5rem;
         margin-bottom: 1rem;
     }
-
-    .category-pills::-webkit-scrollbar {
-        height: 4px;
-    }
-
-    .category-pills::-webkit-scrollbar-thumb {
-        background: var(--sand);
-        border-radius: 4px;
-    }
+    .category-pills::-webkit-scrollbar { height: 4px; }
+    .category-pills::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
 
     .cat-pill {
         white-space: nowrap;
-        padding: .5rem 1rem;
-        background: #fff;
-        border: 1px solid var(--sand);
-        border-radius: 999px;
+        padding: 0.5rem 1rem;
+        background: var(--color-bg-white);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-pill);
         cursor: pointer;
-        font-size: .875rem;
-        font-weight: 500;
-        transition: .15s;
+        font-size: 0.875rem;
+        font-weight: var(--font-semibold);
+        color: var(--color-text-muted);
+        transition: all var(--transition-fast);
     }
-
-    .cat-pill:hover {
-        border-color: var(--espresso);
-    }
-
-    .cat-pill.active {
-        background: var(--espresso);
-        color: #fff;
-        border-color: var(--espresso);
-    }
+    .cat-pill:hover { border-color: var(--color-espresso); color: var(--color-espresso); }
+    .cat-pill.active { background: var(--color-espresso); color: #fff; border-color: var(--color-espresso); }
 
     .product-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: .75rem;
+        gap: 0.75rem;
     }
 
+    /* KARTU PRODUK */
     .product-card {
-        background: #fff;
-        border: 1px solid var(--sand);
-        border-radius: .875rem;
-        padding: .875rem;
+        background: var(--color-bg-white);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: 0.875rem;
         cursor: pointer;
-        transition: .15s;
+        transition: all var(--transition-fast);
         display: flex;
         flex-direction: column;
-        gap: .375rem;
+        gap: 0.375rem;
+        position: relative; /* Digabung dari duplikasi */
     }
-
     .product-card:hover {
-        border-color: var(--espresso);
+        border-color: var(--color-espresso);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(65, 45, 21, .08);
+        box-shadow: var(--shadow-md);
     }
+    .product-card:active { transform: scale(0.97); }
+    .product-card .prod-name { font-weight: var(--font-semibold); font-size: 0.875rem; color: var(--color-espresso); line-height: 1.2; }
+    .product-card .variant-name { font-size: 0.75rem; color: var(--color-text-muted); }
+    .product-card .price { font-weight: var(--font-bold); color: var(--color-espresso); font-family: var(--font-mono); font-size: 0.875rem; margin-top: auto; }
 
-    .product-card:active {
-        transform: scale(.97);
-    }
+    .product-card-disabled { opacity: 0.5; cursor: not-allowed !important; filter: grayscale(0.7); }
+    .product-card-disabled:hover { transform: none !important; border-color: var(--color-border) !important; box-shadow: none !important; }
 
-    .product-card .prod-name {
-        font-weight: 600;
-        font-size: .875rem;
-        color: var(--espresso);
-        line-height: 1.2;
-    }
+    .stock-badge { position: absolute; top: 8px; right: 8px; font-size: 0.7rem; font-weight: bold; padding: 2px 8px; border-radius: 6px; letter-spacing: 0.03em; }
+    .stock-badge-habis { background: var(--color-danger); color: #fff; }
+    .stock-badge-terbatas { background: var(--color-warning); color: #fff; }
 
-    .product-card .variant-name {
-        font-size: .75rem;
-        color: #6c757d;
-    }
-
-    .product-card .price {
-        font-weight: 700;
-        color: var(--espresso);
-        font-family: 'JetBrains Mono', monospace;
-        font-size: .875rem;
-        margin-top: auto;
-    }
-
-    .cart-item {
+    /* PANEL KANAN: KERANJANG */
+    .cart-panel {
+        background: var(--color-bg-white);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-xl);
         display: flex;
-        gap: .75rem;
-        padding: .75rem 0;
-        border-bottom: 1px dashed var(--sand);
+        flex-direction: column;
+        max-height: 100%;
+        box-shadow: var(--shadow-sm);
     }
 
-    .cart-item:last-child {
-        border-bottom: none;
-    }
+    .cart-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-border); }
+    .cart-body { flex: 1; overflow-y: auto; padding: 0.5rem 1.25rem; }
+    .cart-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--color-border); background: var(--color-bg-alt); border-radius: 0 0 var(--radius-xl) var(--radius-xl); }
 
-    .cart-item .info {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .cart-item .name {
-        font-weight: 600;
-        font-size: .85rem;
-        color: var(--espresso);
-        line-height: 1.2;
-    }
-
-    .cart-item .variant {
-        font-size: .7rem;
-        color: #6c757d;
-    }
-
-    .qty-controls {
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-        margin-top: .35rem;
-    }
-
+    /* ITEM KERANJANG */
+    .cart-item { display: flex; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px dashed var(--color-border); }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item .info { flex: 1; min-width: 0; }
+    .cart-item .name { font-weight: var(--font-semibold); font-size: 0.85rem; color: var(--color-espresso); line-height: 1.2; }
+    .cart-item .variant { font-size: 0.7rem; color: var(--color-text-muted); }
+    
+    .qty-controls { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.35rem; }
     .qty-btn {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
-        border: 1px solid var(--sand);
-        background: #fff;
-        font-weight: 700;
-        font-size: .8rem;
-        line-height: 1;
-        color: var(--espresso);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
+        width: 24px; height: 24px; border-radius: 6px; border: 1px solid var(--color-border);
+        background: var(--color-bg-white); font-weight: bold; font-size: 0.8rem; line-height: 1;
+        color: var(--color-espresso); display: flex; align-items: center; justify-content: center;
+        cursor: pointer; transition: all var(--transition-fast);
     }
+    .qty-btn:hover { background: var(--color-espresso); color: #fff; border-color: var(--color-espresso); }
+    .qty-input { width: 40px; text-align: center; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.8rem; padding: 2px; }
+    .cart-item .subtotal { font-weight: bold; color: var(--color-espresso); font-family: var(--font-mono); font-size: 0.85rem; white-space: nowrap; }
 
-    .qty-btn:hover {
-        background: var(--espresso);
-        color: #fff;
-        border-color: var(--espresso);
-    }
-
-    .qty-input {
-        width: 40px;
-        text-align: center;
-        border: 1px solid var(--sand);
-        border-radius: 6px;
-        font-size: .8rem;
-        padding: 2px;
-    }
-
-    .cart-item .subtotal {
-        font-weight: 700;
-        color: var(--espresso);
-        font-family: 'JetBrains Mono', monospace;
-        font-size: .85rem;
-        white-space: nowrap;
-    }
-
-    .empty-cart {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #adb5bd;
-    }
-
-    .grand-total {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
-        color: var(--espresso);
-        font-size: 1.5rem;
-    }
-
+    .empty-cart { text-align: center; padding: 3rem 1rem; color: var(--color-text-muted); }
+    
+    .grand-total { font-family: var(--font-mono); font-weight: bold; color: var(--color-espresso); font-size: 1.5rem; }
+    
     .btn-checkout {
-        background: var(--espresso);
-        color: #fff;
-        font-weight: 700;
-        padding: .875rem;
-        border-radius: .75rem;
-        width: 100%;
-        border: none;
-        font-size: 1rem;
+        background: var(--color-espresso); color: #fff; font-weight: bold; padding: 0.875rem;
+        border-radius: var(--radius-lg); width: 100%; border: none; font-size: 1rem;
+        transition: all var(--transition-fast);
     }
+    .btn-checkout:hover:not(:disabled) { background: var(--color-espresso-dark); }
+    .btn-checkout:disabled { opacity: 0.5; }
 
-    .btn-checkout:hover:not(:disabled) {
-        background: #2a1d0e;
-        color: #fff;
-    }
-
-    .btn-checkout:disabled {
-        opacity: .5;
-    }
-
-    .product-card {
-        position: relative;
-    }
-
-    .product-card-disabled {
-        opacity: 0.5;
-        cursor: not-allowed !important;
-        filter: grayscale(0.7);
-    }
-
-    .product-card-disabled:hover {
-        transform: none !important;
-        border-color: var(--sand) !important;
-        box-shadow: none !important;
-    }
-
-    .stock-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
-        letter-spacing: 0.03em;
-    }
-
-    .stock-badge-habis {
-        background: #A83232;
-        color: #fff;
-    }
-
-    .stock-badge-terbatas {
-        background: #B8860B;
-        color: #fff;
+    /* --- RESPONSIVE MOBILE (<= 991px) --- */
+    @media (max-width: 991.98px) {
+        .pos-wrapper {
+            grid-template-columns: 1fr;
+            height: auto;
+        }
+        
+        /* Keranjang mengalir normal di bawah produk */
+        .cart-panel {
+            margin-top: 1rem;
+            max-height: none;
+        }
     }
 </style>
 

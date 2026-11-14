@@ -11,12 +11,7 @@ test*.php
 _backfill*.php
 _debug_*.php
 _test_*.php
-_seed*.php
-biawak_jantan.php
 seed_*.php
 
-# Uploads (use symlink to external storage)
+# User uploads
 /uploads/
-
-# Company folder (if not needed in repo)
-# /company/
