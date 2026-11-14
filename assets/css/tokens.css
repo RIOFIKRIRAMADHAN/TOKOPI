@@ -1,0 +1,144 @@
+/* =========================================
+   TOKOPI DESIGN TOKENS
+   Single source of truth for colors, spacing, typography
+   ========================================= */
+
+:root {
+  /* ---- Brand Colors ---- */
+  --color-espresso: #2D1B0A;        /* Primary - WCAG AA 7.2:1 on sand-50 */
+  --color-espresso-dark: #1A0F06;   /* Primary hover */
+  --color-espresso-light: #4A3418;  /* Primary light */
+  --color-sand: #E1DCC9;            /* Secondary */
+  --color-sand-light: #F3F0E6;      /* Secondary light */
+  --color-sand-50: #FAF6EC;         /* Secondary pale */
+  --color-sand-dark: #C9C0A3;       /* Secondary dark */
+
+  /* ---- Semantic Colors ---- */
+  --color-success: #2E7D5B;
+  --color-success-light: #3AA872;
+  --color-warning: #B8860B;
+  --color-danger: #A83232;
+  --color-danger-light: #C0392B;
+  --color-info: #3A7BC8;
+
+  /* ---- Neutral / UI ---- */
+  --color-bg: #EDEAE3;              /* App background */
+  --color-bg-alt: #FAF9F5;          /* Card / page background */
+  --color-bg-white: #FFFFFF;
+  --color-text: #2B1F12;            /* Primary text */
+  --color-text-muted: #6B5B4A;      /* Muted text */
+  --color-text-on-dark: #FFFFFF;    /* Text on espresso */
+  --color-border: #F0EDE5;          /* Default border */
+  --color-border-strong: #E1DCC9;   /* Stronger border */
+  --color-focus: rgba(45, 27, 10, 0.25);
+  --color-overlay: rgba(26, 15, 6, 0.6);
+
+  /* ---- Spacing Scale (4px base) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* ---- Shadows ---- */
+  --shadow-sm: 0 1px 2px rgba(45, 27, 10, 0.04);
+  --shadow-md: 0 4px 12px rgba(45, 27, 10, 0.06);
+  --shadow-lg: 0 8px 24px rgba(45, 27, 10, 0.08);
+  --shadow-xl: 0 16px 40px rgba(45, 27, 10, 0.10);
+  --shadow-focus: 0 0 0 3px var(--color-focus);
+  --shadow-elevated: 0 4px 20px rgba(45, 27, 10, 0.12);
+
+  /* ---- Typography ---- */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs: 0.6875rem;   /* 11px */
+  --text-sm: 0.8125rem;   /* 13px */
+  --text-base: 0.9375rem; /* 15px */
+  --text-lg: 1.0625rem;   /* 17px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 2rem;       /* 32px */
+  --text-4xl: 2.5rem;     /* 40px */
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  --leading-tight: 1.15;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* ---- Transitions ---- */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 280ms ease;
+
+  /* ---- Z-Index Scale ---- */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-offcanvas: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-toast: 700;
+  --z-tooltip: 800;
+
+  /* ---- Layout Dimensions ---- */
+  --sidebar-width: 260px;
+  --topbar-height: 64px;
+  --bottom-nav-height: 68px;
+  --cart-float-size: 56px;
+
+  /* ---- Breakpoints (match Bootstrap 5) ---- */
+  --bp-sm: 576px;
+  --bp-md: 768px;
+  --bp-lg: 992px;
+  --bp-xl: 1200px;
+  --bp-xxl: 1400px;
+}
+
+/* Dark mode support (future) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1A1612;
+    --color-bg-alt: #231D16;
+    --color-bg-white: #2D261F;
+    --color-text: #F3F0E6;
+    --color-text-muted: #B8AE9A;
+    --color-border: #3D3328;
+    --color-border-strong: #5A4D3A;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-slow: 0ms;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
