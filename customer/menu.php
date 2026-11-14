@@ -1,13 +1,19 @@
 <?php
 require_once __DIR__ . '/../config/bootstrap.php';
 
-if (empty($_SESSION['customer_table_id'])) {
+$has_table   = !empty($_SESSION['customer_table_id']);
+$has_account = !empty($_SESSION['customer_account_id']);
+
+// Tendang ke scan QR hanya jika dia BUKAN guest (tanpa meja) DAN belum login
+if (!$has_table && !$has_account) {
     redirect('/tokopi/customer/t.php');
 }
 
-$outlet_id   = (int)$_SESSION['customer_outlet_id'];
-$table_nama  = $_SESSION['customer_table_nama'];
-$outlet_nama = $_SESSION['customer_outlet_nama'];
+// Jika dia login dari rumah, variabel ini kosong. Kita set default.
+$outlet_id   = (int)($_SESSION['customer_outlet_id'] ?? 0);
+$table_nama  = $_SESSION['customer_table_nama'] ?? 'Belum Scan Meja';
+$outlet_nama = $_SESSION['customer_outlet_nama'] ?? 'Tokopi';
+$customer_name = $_SESSION['customer_account_name'] ?? null;
 
 $stmt = $pdo->prepare("SELECT tenant_id FROM outlets WHERE id = ?");
 $stmt->execute([$outlet_id]);

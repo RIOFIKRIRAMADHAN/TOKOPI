@@ -96,6 +96,8 @@ if ($is_logged_in) {
             font-family: 'Playfair Display', serif;
             position: relative;
             z-index: 1;
+            overflow: hidden;
+            border: 3px solid rgba(255, 255, 255, 0.2);
         }
 
         .profile-name {
@@ -344,7 +346,13 @@ if ($is_logged_in) {
 
         <!-- PROFILE HEADER -->
         <div class="profile-header">
-            <div class="avatar"><?= strtoupper(substr($customer_name, 0, 1)) ?></div>
+            <div class="avatar">
+                <?php if (!empty($customer['avatar_path'])): ?>
+                    <img src="/tokopi/<?= e($customer['avatar_path']) ?>?t=<?= time() ?>" alt="Avatar" style="width:100%; height:100%; object-fit:cover;">
+                <?php else: ?>
+                    <?= strtoupper(substr($customer_name, 0, 1)) ?>
+                <?php endif; ?>
+            </div>
             <div class="profile-name"><?= e($customer_name) ?></div>
             <div class="profile-email"><?= e($customer_email) ?></div>
             <div class="tier-badge tier-<?= e($customer['tier']) ?>">
@@ -385,7 +393,7 @@ if ($is_logged_in) {
                 <span class="label">Voucher Saya</span>
                 <i class="bi bi-chevron-right arrow"></i>
             </a>
-            <a href="#" class="menu-item-link" onclick="alert('Fitur akan segera hadir'); return false;">
+            <a href="/tokopi/customer/profile_edit.php" class="menu-item-link">
                 <i class="bi bi-pencil"></i>
                 <span class="label">Edit Profil</span>
                 <i class="bi bi-chevron-right arrow"></i>
@@ -406,6 +414,13 @@ if ($is_logged_in) {
                     Outlet: <strong><?= e($outlet_nama) ?></strong>
                 </span>
             </div>
+        </div>
+        <div class="menu-list">
+        <a href="/tokopi/customer/reset_table.php" class="menu-item-link" onclick="return confirm('Lupakan meja saat ini? Kamu harus scan QR ulang untuk memesan.');">
+            <i class="bi bi-x-circle text-danger"></i>
+            <span class="label text-danger">Lupakan Meja Saat Ini</span>
+            <i class="bi bi-chevron-right arrow"></i>
+        </a>
         </div>
 
         <!-- LOGOUT ACCOUNT -->
@@ -465,6 +480,8 @@ if ($is_logged_in) {
         <a href="/tokopi/customer/profile.php" class="nav-item active">
             <i class="bi bi-person"></i>Profile
         </a>
+
+
     </div>
 
 </body>

@@ -2,21 +2,28 @@
 // customer/account_action.php
 require_once __DIR__ . '/../config/bootstrap.php';
 
-if (empty($_SESSION['customer_table_id'])) {
-    redirect('/tokopi/customer/t.php');
-}
+// HAPUS BLOKIR MEJA
+// if (empty($_SESSION['customer_table_id'])) { redirect('/tokopi/customer/t.php'); }
 
 $action = $_GET['action'] ?? '';
-$outlet_id = (int)$_SESSION['customer_outlet_id'];
 
-// Ambil tenant_id dari outlet
-$stmt = $pdo->prepare("SELECT tenant_id FROM outlets WHERE id = ?");
-$stmt->execute([$outlet_id]);
-$tenant_id = (int)$stmt->fetchColumn();
+// Ambil tenant_id (Bisa dari outlet meja, atau fallback ke tenant pertama jika dari luar)
+$outlet_id = (int)($_SESSION['customer_outlet_id'] ?? 0);
+$tenant_id = 0;
+
+if ($outlet_id > 0) {
+    $stmt = $pdo->prepare("SELECT tenant_id FROM outlets WHERE id = ?");
+    $stmt->execute([$outlet_id]);
+    $tenant_id = (int)$stmt->fetchColumn();
+} else {
+    // Fallback: Ambil tenant pertama (karena biasanya 1 coffee shop utama)
+    $stmt = $pdo->query("SELECT id FROM tenants ORDER BY id LIMIT 1");
+    $tenant_id = (int)$stmt->fetchColumn();
+}
 
 if (!$tenant_id) {
-    flash_set('error', 'Outlet tidak valid.');
-    redirect('/tokopi/customer/home.php');
+    flash_set('error', 'Outlet / Tenant tidak valid.');
+    redirect('/tokopi/customer/login.php');
 }
 
 // ============================================
@@ -31,7 +38,6 @@ if ($action === 'register') {
     $password         = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
 
-    // Validasi
     if ($nama === '' || strlen($nama) > 100) {
         flash_set('error', 'Nama wajib diisi (max 100 karakter).');
         redirect('/tokopi/customer/register.php');
@@ -53,7 +59,6 @@ if ($action === 'register') {
         redirect('/tokopi/customer/register.php');
     }
 
-    // Cek email sudah dipakai di tenant ini
     $stmt = $pdo->prepare("SELECT id FROM customers WHERE tenant_id = ? AND email = ?");
     $stmt->execute([$tenant_id, $email]);
     if ($stmt->fetch()) {
@@ -76,12 +81,18 @@ if ($action === 'register') {
         $customer_id = (int)$pdo->lastInsertId();
 
         // Auto-login
-        $_SESSION['customer_account_id']   = $customer_id;
-        $_SESSION['customer_account_name'] = $nama;
+        $_SESSION['customer_account_id']    = $customer_id;
+        $_SESSION['customer_account_name']  = $nama;
         $_SESSION['customer_account_email'] = $email;
 
         flash_set('success', 'Selamat datang, ' . $nama . '! Akun berhasil dibuat.');
-        redirect('/tokopi/customer/profile.php');
+        
+        // REDIRECT PINTAR
+        if (!empty($_SESSION['customer_table_id'])) {
+            redirect('/tokopi/customer/home.php');
+        } else {
+            redirect('/tokopi/customer/profile.php');
+        }
 
     } catch (PDOException $e) {
         flash_set('error', 'Gagal mendaftar: ' . $e->getMessage());
@@ -103,7 +114,6 @@ elseif ($action === 'login') {
         redirect('/tokopi/customer/login.php');
     }
 
-    // Cari customer
     $stmt = $pdo->prepare("
         SELECT id, nama, email, password
         FROM customers
@@ -117,15 +127,20 @@ elseif ($action === 'login') {
         redirect('/tokopi/customer/login.php');
     }
 
-    // Set session
     $_SESSION['customer_account_id']    = (int)$customer['id'];
     $_SESSION['customer_account_name']  = $customer['nama'];
     $_SESSION['customer_account_email'] = $customer['email'];
 
     flash_set('success', 'Selamat datang kembali, ' . $customer['nama'] . '!');
-    redirect('/tokopi/customer/profile.php');
+    
+    // REDIRECT PINTAR
+    if (!empty($_SESSION['customer_table_id'])) {
+        redirect('/tokopi/customer/home.php');
+    } else {
+        redirect('/tokopi/customer/profile.php');
+    }
 }
 
 else {
-    redirect('/tokopi/customer/home.php');
+    redirect('/tokopi/customer/login.php');
 }

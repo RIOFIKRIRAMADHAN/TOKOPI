@@ -241,15 +241,117 @@ if (current_outlet_id()) {
         .table td {
             vertical-align: middle;
         }
+
+        /* ==========================================
+           MICRO-INTERACTIONS & ANIMATIONS
+           ========================================== */
+
+        /* 1. Tombol Melayang (Hover & Active) */
+        .btn {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(65, 45, 21, 0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        /* Khusus tombol outline agar tidak terlalu gelap */
+        .btn-outline-dark:hover,
+        .btn-outline-secondary:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 2. Card Melayang & Shadow Halus */
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Card yang ada di dalam tabel/list jangan melayang terlalu jauh */
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(65, 45, 21, 0.08);
+        }
+
+        /* Efek hover khusus untuk Card Statistik/KPI di Dashboard */
+        .kpi-card:hover,
+        .col-md-3 .card:hover,
+        .col-md-4 .card:hover {
+            transform: translateY(-3px);
+        }
+
+        /* 3. Baris Tabel (Hover Highlight) */
+        .table-hover tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #FAF9F5;
+            /* Warna sand sangat tipis */
+        }
+
+        /* 4. Sidebar Menu Item */
+        .sidebar .nav-link {
+            transition: all 0.2s ease;
+        }
+
+        .sidebar .nav-link:hover {
+            padding-left: 1.25rem;
+            /* Efek geser sedikit ke kanan */
+        }
+
+        /* 5. Animasi Fade-In saat halaman dimuat */
+
+
+        /* 6. Animasi Spinner pada Tombol Submit */
+        .btn .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+        }
+
+        /* 7. Efek Fokus pada Form Input */
+        .form-control,
+        .form-select {
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* 8. Badge Status Berkedip Halus (Pulse) */
+        @keyframes softPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(65, 45, 21, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(65, 45, 21, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(65, 45, 21, 0);
+            }
+        }
+
+        .badge.bg-success {
+            animation: softPulse 2s infinite;
+        }
     </style>
 </head>
 
 <body>
 
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            Tokopi
-            <small>Coffee Shop ERP</small>
+        <div class="sidebar-brand d-flex align-items-center gap-2">
+            <div style="width: 36px; height: 36px; background: var(--sand); color: var(--espresso); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-cup-hot-fill" style="font-size: 1.2rem;"></i>
+            </div>
+            <div style="line-height: 1;">
+                <span style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; letter-spacing: 0.5px;">Tokopi</span>
+                <small style="font-size: 0.6rem; display: block; margin-top: 4px; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 1px;">Coffee ERP</small>
+            </div>
         </div>
 
         <nav class="nav flex-column">
@@ -332,6 +434,12 @@ if (current_outlet_id()) {
                 <?php endif; ?>
                 <a class="nav-link <?= $active_menu === 'reports_loyalty' ? 'active' : '' ?>" href="/tokopi/views/reports/loyalty.php">
                     <i class="bi bi-bar-chart"></i> Laporan Loyalty
+                </a>
+                <a class="nav-link <?= $active_menu === 'contact_inbox' ? 'active' : '' ?>" href="/tokopi/views/contact_inbox.php">
+                    <i class="bi bi-inbox"></i> Inbox Pesan
+                </a>
+                <a class="nav-link <?= $active_menu === 'testimonials' ? 'active' : '' ?>" href="/tokopi/views/testimonials.php">
+                    <i class="bi bi-chat-quote"></i> Testimoni
                 </a>
             <?php endif; ?>
         </nav>
