@@ -26,7 +26,7 @@ $table_nama = $_SESSION['customer_table_nama'] ?? '';
     <link href="/tokopi/assets/css/app.css" rel="stylesheet">
 </head>
 
-<body class="auth-page">
+<body class="theme-dark">
     <div class="bg-ornament"></div>
 
     <div class="auth-container">
