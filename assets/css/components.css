@@ -45,38 +45,119 @@ small, .text-xs { font-size: var(--text-xs); }
 a { color: var(--color-espresso); text-decoration: none; transition: color var(--transition-fast); }
 a:hover { color: var(--color-espresso-dark); text-decoration: underline; }
 
-/* ---- Buttons ---- */
+/* =========================================
+   BUTTONS (VISIBILITY ENHANCED)
+   ========================================= */
+
+/* Base: never invisible, always has background or border */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
-  padding: var(--space-3) var(--space-5); font-size: var(--text-sm); font-weight: var(--font-semibold);
-  font-family: var(--font-sans); border: none; border-radius: var(--radius-md); cursor: pointer;
-  transition: all var(--transition-fast); text-decoration: none; white-space: nowrap;
+  padding: var(--space-3) var(--space-5); 
+  font-size: var(--text-sm); font-weight: var(--font-semibold);
+  font-family: var(--font-sans); 
+  border: 1px solid transparent; 
+  border-radius: var(--radius-md); 
+  cursor: pointer;
+  transition: all var(--transition-fast); 
+  text-decoration: none; 
+  white-space: nowrap;
+  /* Default fallback: light gray */
+  background: #F3F0E6;
+  color: var(--color-espresso);
 }
-.btn:disabled, .btn.disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
-.btn:active:not(:disabled) { transform: scale(0.98); }
 
-.btn-espresso { background: var(--color-espresso); color: var(--color-text-on-dark) !important; }
-.btn-espresso:hover:not(:disabled) { background: var(--color-espresso-dark); color: var(--color-text-on-dark) !important; box-shadow: var(--shadow-md); text-decoration: none; }
-.btn-espresso:focus-visible { box-shadow: var(--shadow-focus), var(--shadow-md); }
+.btn:disabled, .btn.disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+  pointer-events: none; 
+  box-shadow: none !important;
+}
+.btn:active:not(:disabled) { transform: scale(0.97); }
 
-.btn-sand { background: var(--color-sand); color: var(--color-espresso) !important; border: 1px solid var(--color-border-strong); }
-.btn-sand:hover:not(:disabled) { background: var(--color-sand-light); border-color: var(--color-espresso); color: var(--color-espresso) !important; text-decoration: none; }
+/* === PRIMARY: Espresso Solid === */
+.btn-espresso { 
+  background: var(--color-espresso); 
+  color: var(--color-text-on-dark) !important; 
+  border-color: var(--color-espresso);
+  box-shadow: 0 2px 6px rgba(45, 27, 10, 0.2);
+}
+.btn-espresso:hover:not(:disabled) { 
+  background: var(--color-espresso-dark); 
+  border-color: var(--color-espresso-dark);
+  box-shadow: 0 4px 12px rgba(45, 27, 10, 0.3); 
+  transform: translateY(-1px);
+  text-decoration: none; 
+}
 
-.btn-outline-espresso { background: transparent; color: var(--color-espresso) !important; border: 1.5px solid var(--color-espresso); }
-.btn-outline-espresso:hover:not(:disabled) { background: var(--color-espresso); color: var(--color-text-on-dark) !important; text-decoration: none; }
+/* === SECONDARY: Sand === */
+.btn-sand { 
+  background: var(--color-sand); 
+  color: var(--color-espresso) !important; 
+  border-color: var(--color-espresso); /* Border lebih tegas */
+  box-shadow: 0 2px 6px rgba(45, 27, 10, 0.1);
+}
+.btn-sand:hover:not(:disabled) { 
+  background: var(--color-sand-light); 
+  border-color: var(--color-espresso);
+  box-shadow: 0 4px 12px rgba(45, 27, 10, 0.15);
+  transform: translateY(-1px);
+  text-decoration: none; 
+}
 
-.btn-outline-sand { background: transparent; color: var(--color-espresso) !important; border: 1.5px solid var(--color-sand); }
-.btn-outline-sand:hover:not(:disabled) { background: var(--color-sand); color: var(--color-espresso) !important; text-decoration: none; }
+/* === OUTLINE ESPRESSO (Tombol "Batal" / Outline) === */
+.btn-outline-espresso { 
+  background: transparent; 
+  color: var(--color-espresso) !important; 
+  border: 1.5px solid var(--color-espresso); 
+}
+.btn-outline-espresso:hover:not(:disabled) { 
+  background: rgba(45, 27, 10, 0.05); 
+  border-color: var(--color-espresso);
+  text-decoration: none; 
+}
 
-.btn-ghost { background: transparent; color: var(--color-text); border: 1px solid transparent; }
-.btn-ghost:hover:not(:disabled) { background: var(--color-border); color: var(--color-espresso) !important; text-decoration: none; }
+/* === OUTLINE SAND (FIXED: pakai warna lebih gelap) === */
+.btn-outline-sand { 
+  background: transparent; 
+  color: var(--color-espresso) !important; 
+  border: 1.5px solid #C9C0A3; /* Sand-dark, bukan sand-light */
+}
+.btn-outline-sand:hover:not(:disabled) { 
+  background: var(--color-sand-light); 
+  border-color: var(--color-espresso); 
+  text-decoration: none; 
+}
 
-.btn-danger { background: var(--color-danger); color: var(--color-text-on-dark) !important; }
-.btn-danger:hover:not(:disabled) { background: var(--color-danger-light); color: var(--color-text-on-dark) !important; }
+/* === GHOST (Transparan tapi tetap keliatan hover) === */
+.btn-ghost { 
+  background: transparent; 
+  color: var(--color-text); 
+  border: 1px solid transparent; 
+}
+.btn-ghost:hover:not(:disabled) { 
+  background: var(--color-bg-alt); 
+  color: var(--color-espresso) !important; 
+  text-decoration: none; 
+}
 
+/* === DANGER === */
+.btn-danger { 
+  background: var(--color-danger); 
+  color: #fff !important; 
+  border-color: var(--color-danger);
+  box-shadow: 0 2px 6px rgba(168, 50, 50, 0.2);
+}
+.btn-danger:hover:not(:disabled) { 
+  background: var(--color-danger-light); 
+  border-color: var(--color-danger-light);
+  box-shadow: 0 4px 12px rgba(168, 50, 50, 0.3);
+  transform: translateY(-1px);
+}
+
+/* === SIZES === */
 .btn-sm { padding: var(--space-2) var(--space-4); font-size: var(--text-xs); }
 .btn-lg { padding: var(--space-4) var(--space-6); font-size: var(--text-base); }
-.btn-block { width: 100%; }
+.btn-block { width: 100%; display: flex; }
 .btn-circle { width: 40px; height: 40px; padding: 0; border-radius: var(--radius-circle); }
 .btn-circle-lg { width: 48px; height: 48px; padding: 0; border-radius: var(--radius-circle); }
 
@@ -169,7 +250,8 @@ a:hover { color: var(--color-espresso-dark); text-decoration: underline; }
 /* ---- Dropdown ---- */
 .dropdown { position: relative; display: inline-block; }
 .dropdown-menu { position: absolute; top: 100%; right: 0; min-width: 200px; margin-top: var(--space-2); background: var(--color-bg-white); border: 1px solid var(--color-border); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); opacity: 0; visibility: hidden; transform: translateY(-8px); transition: all var(--transition-fast); z-index: var(--z-dropdown); }
-.dropdown.open .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0); }
+.dropdown.open .dropdown-menu,
+.dropdown-menu.show { opacity: 1; visibility: visible; transform: translateY(0); } /* .show = dropdown Bootstrap */
 .dropdown-item { display: block; padding: var(--space-3) var(--space-4); font-size: var(--text-sm); color: var(--color-text); text-decoration: none; transition: background var(--transition-fast); }
 .dropdown-item:hover { background: var(--color-bg); color: var(--color-espresso); text-decoration: none; }
 .dropdown-divider { height: 1px; background: var(--color-border); margin: var(--space-2) 0; }
@@ -183,8 +265,11 @@ a:hover { color: var(--color-espresso-dark); text-decoration: underline; }
 /* ---- Modal / Offcanvas ---- */
 .modal-overlay { position: fixed; inset: 0; background: var(--color-overlay); display: flex; align-items: center; justify-content: center; padding: var(--space-4); z-index: var(--z-modal); opacity: 0; visibility: hidden; transition: opacity var(--transition-base), visibility var(--transition-base); }
 .modal-overlay.open { opacity: 1; visibility: visible; }
-.modal { background: var(--color-bg-white); border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); max-width: 100%; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform var(--transition-base); }
-.modal-overlay.open .modal { transform: scale(1); }
+/* Hanya untuk modal custom (.modal-overlay). JANGAN pakai selector .modal polos:
+   itu bentrok dengan modal Bootstrap (lapisan selebar layar) dan membuat layar
+   tampak terang/putih saat tombol CRUD membuka modal. */
+.modal-overlay > .modal { border-radius: var(--radius-xl); box-shadow: var(--shadow-xl); max-width: 100%; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform var(--transition-base); }
+.modal-overlay.open > .modal { transform: scale(1); }
 .modal-header { padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center; }
 .modal-title { font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--color-espresso); }
 .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--color-text-muted); cursor: pointer; padding: var(--space-1); line-height: 1; }

@@ -1,0 +1,12 @@
+# Folder upload: sajikan gambar dengan tipe yang benar, dan jangan pernah jalankan skrip.
+AddType image/webp .webp
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|phtml|phar|pl|py|cgi|sh)$">
+    Require all denied
+</FilesMatch>
+Options -Indexes

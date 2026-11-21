@@ -100,8 +100,8 @@ try {
     $placeholders = implode(',', array_fill(0, count($variant_ids), '?'));
 
     $stmt = $pdo->prepare("
-        SELECT v.id, v.nama AS variant_nama, v.harga_jual, v.sku,
-               p.nama AS product_nama, p.tenant_id
+        SELECT v.id, v.nama AS variant_nama, v.harga_jual, v.sku, v.temperature,
+               p.id AS product_id, p.nama AS product_nama, p.tenant_id
         FROM product_variants v
         JOIN products p ON p.id = v.product_id
         WHERE v.id IN ($placeholders)
@@ -118,8 +118,13 @@ try {
     }
 
     if (count($variants_map) !== count(array_unique($variant_ids))) {
-        throw new Exception('Ada varian yang tidak valid.');
+        throw new Exception('Ada menu di keranjang yang sudah tidak tersedia. Hapus lalu pilih ulang.');
     }
+
+    // Opsi menu yang berlaku untuk produk-produk di keranjang
+    $option_groups = menu_option_groups($pdo, array_column($variants_map, 'product_id'));
+    // Total kebutuhan bahan dari SEMUA baris (varian sama bisa muncul di beberapa baris)
+    $need_by_ingredient = [];
 
     // ============================================
     // CEK VOUCHER (kalau ada)
@@ -189,7 +194,8 @@ try {
         if (strlen($note) > 200) throw new Exception('Catatan terlalu panjang.');
 
         $v = $variants_map[$vid];
-        $harga = (float)$v['harga_jual'];
+        $mods = menu_validate_options($option_groups[(int)$v['product_id']] ?? [], (array)($it['modifiers'] ?? []), $v['product_nama'], $v['temperature']);
+        $harga = (float)$v['harga_jual'] + $mods['total'];
         $line_total = $harga * $qty;
 
         // Ambil resep
@@ -224,16 +230,12 @@ try {
             }
         }
 
-        // Cek stok
+        // Kumpulkan kebutuhan bahan (dicek sekaligus setelah semua baris dihitung)
         foreach ($breakdown as $b) {
-            $butuh = $b['qty'] * $qty;
-            $stmt = $pdo->prepare("SELECT COALESCE(qty, 0) FROM stocks WHERE outlet_id = ? AND ingredient_id = ?");
-            $stmt->execute([$outlet_id, $b['ingredient_id']]);
-            $tersedia = (float)$stmt->fetchColumn();
-
-            if ($tersedia < $butuh) {
-                throw new Exception("Stok {$b['nama']} tidak cukup. Tersedia " . number_format($tersedia, 2) . " {$b['unit']}.");
-            }
+            $iid = $b['ingredient_id'];
+            if (!isset($need_by_ingredient[$iid])) $need_by_ingredient[$iid] = ['qty' => 0, 'products' => []];
+            $need_by_ingredient[$iid]['qty'] += $b['qty'] * $qty;
+            $need_by_ingredient[$iid]['products'][$v['product_nama']] = true;
         }
 
         $subtotal += $line_total;
@@ -249,7 +251,22 @@ try {
             'unit_cost_snapshot' => $unit_cost,
             'cost_breakdown'     => $breakdown,
             'note'               => $note ?: null,
+            'modifiers'          => $mods['snapshot'],
+            'modifier_total'     => $mods['total'],
         ];
+    }
+
+    // Cek stok gabungan semua baris
+    if ($need_by_ingredient) {
+        $stmt = $pdo->prepare("SELECT COALESCE(qty, 0) FROM stocks WHERE outlet_id = ? AND ingredient_id = ?");
+        foreach ($need_by_ingredient as $iid => $need) {
+            $stmt->execute([$outlet_id, $iid]);
+            $tersedia = (float)$stmt->fetchColumn();
+            if ($tersedia < $need['qty']) {
+                $names = implode(', ', array_keys($need['products']));
+                throw new Exception("Maaf, stok untuk {$names} tidak cukup untuk jumlah ini. Kurangi jumlah atau pilih menu lain.");
+            }
+        }
     }
 
     // Hitung diskon dari voucher
@@ -327,8 +344,8 @@ try {
     $stmt_item = $pdo->prepare("
         INSERT INTO order_items
         (order_id, variant_id, product_nama, variant_nama, qty, harga_satuan, line_total,
-         unit_cost_snapshot, cost_breakdown, note)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         unit_cost_snapshot, cost_breakdown, modifiers, modifier_total, note)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     foreach ($lines as $l) {
         $stmt_item->execute([
@@ -341,6 +358,8 @@ try {
             $l['line_total'],
             $l['unit_cost_snapshot'],
             json_encode($l['cost_breakdown'], JSON_UNESCAPED_UNICODE),
+            $l['modifiers'] ? json_encode($l['modifiers'], JSON_UNESCAPED_UNICODE) : null,
+            $l['modifier_total'],
             $l['note'],
         ]);
     }

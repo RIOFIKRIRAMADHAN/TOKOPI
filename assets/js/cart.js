@@ -178,3 +178,38 @@ window.addEventListener('storage', (e) => {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { Cart, CART_KEY, CART_EVENT };
 }
+// ---------------------------------------------------------------
+// Bar keranjang: tombol bulat .cart-float diubah jadi bar
+// "N item · Lihat keranjang · Rp X" yang hanya muncul bila ada isi.
+// ---------------------------------------------------------------
+(function () {
+  function stateFromStorage() {
+    var raw = {};
+    try { raw = JSON.parse(localStorage.getItem(CART_KEY) || '{}'); } catch (e) {}
+    var items = Object.values(raw), count = 0, total = 0;
+    items.forEach(function (it) {
+      var q = Number(it.qty) || 0;
+      count += q;
+      total += (Number(it.harga != null ? it.harga : it.price) || 0) * q;
+    });
+    return { count: count, total: total };
+  }
+  function render() {
+    var el = document.querySelector('.cart-float');
+    if (!el) return;
+    var s = stateFromStorage();
+    if (!el.querySelector('.cb-label')) {
+      el.insertAdjacentHTML('beforeend', '<span class="cb-label">Lihat keranjang</span><span class="cb-total"></span>');
+    }
+    el.classList.toggle('has-items', s.count > 0);
+    document.body.classList.toggle('has-cart-bar', s.count > 0);
+    el.querySelector('.cb-total').textContent = 'Rp ' + Math.round(s.total).toLocaleString('id-ID');
+    el.setAttribute('aria-label', 'Lihat keranjang, ' + s.count + ' item, total Rp ' + Math.round(s.total).toLocaleString('id-ID'));
+    var badge = document.getElementById('cart-badge');
+    if (badge) { badge.textContent = s.count > 99 ? '99+' : s.count; badge.style.display = s.count > 0 ? 'flex' : 'none'; }
+  }
+  window.addEventListener(CART_EVENT, render);
+  window.addEventListener('storage', render);
+  document.addEventListener('DOMContentLoaded', render);
+  window.tokopiRenderCartBar = render;
+})();

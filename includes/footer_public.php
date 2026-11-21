@@ -1,104 +1,81 @@
 <?php
 // includes/footer_public.php
 ?>
+    </main>
 
-    <!-- FOOTER PUBLIK -->
-    <footer class="footer-tokopi">
-        <div class="container">
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <h5 class="d-flex align-items-center gap-2 mb-3" style="color:#fff; font-family:'Playfair Display', serif; font-weight:700;">
-                        <i class="bi bi-cup-hot-fill"></i> <span>Tokopi</span>
-                    </h5>
-                    <p class="small mb-3" style="opacity:.85;">Kopi pilihan, suasana hangat. Dibuat dengan penuh perhatian untuk setiap cangkir yang kamu nikmati.</p>
-                    <div class="d-flex gap-2">
-                        <a href="#" class="footer-social" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
-                        <a href="#" class="footer-social" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
-                        <a href="#" class="footer-social" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+    <footer class="p-foot">
+        <div class="wrap">
+            <div class="p-foot-grid">
+                <div>
+                    <div class="big">Tokopi.</div>
+                    <p style="max-width:30ch;">Kedai kopi lokal di Jakarta. Pesan dari meja, bayar QRIS atau tunai, dan kumpulkan poin.</p>
+                    <p class="open-dot <?= $IS_OPEN_NOW ? '' : 'closed' ?>" style="color:var(--p-night-ink);"><?= $IS_OPEN_NOW ? 'Sedang buka' : 'Sedang tutup' ?> · <?= e($PUBLIC_HOURS['label']) ?></p>
+                    <div class="p-social">
+                        <a href="https://instagram.com" target="_blank" rel="noopener" aria-label="Instagram Tokopi"><i class="bi bi-instagram" aria-hidden="true"></i></a>
+                        <a href="https://tiktok.com" target="_blank" rel="noopener" aria-label="TikTok Tokopi"><i class="bi bi-tiktok" aria-hidden="true"></i></a>
+                        <a href="mailto:hello@tokopi.id" aria-label="Email Tokopi"><i class="bi bi-envelope" aria-hidden="true"></i></a>
                     </div>
                 </div>
-                <div class="col-lg-2 col-6">
-                    <h6 class="text-uppercase small fw-bold mb-3" style="color:var(--sand);opacity:.7;letter-spacing:.1em;">Jelajahi</h6>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="<?= $COMPANY_BASE ?>/about.php">About</a></li>
-                        <li class="mb-2"><a href="<?= $COMPANY_BASE ?>/menu.php">Menu</a></li>
-                        <li class="mb-2"><a href="<?= $COMPANY_BASE ?>/blog.php">Blog</a></li>
-                        <li class="mb-2"><a href="<?= $COMPANY_BASE ?>/contact.php">Contact</a></li>
+                <div>
+                    <h2>Cabang</h2>
+                    <ul>
+                        <?php foreach ($PUBLIC_OUTLETS as $__o): ?>
+                            <li><a href="<?= $COMPANY_BASE ?>/contact.php#cabang-<?= (int)$__o['id'] ?>"><?= e(outlet_short($__o['nama'])) ?></a></li>
+                        <?php endforeach; ?>
+                        <?php if (!$PUBLIC_OUTLETS): ?><li>Jakarta</li><?php endif; ?>
                     </ul>
                 </div>
-                <div class="col-lg-2 col-6">
-                    <h6 class="text-uppercase small fw-bold mb-3" style="color:var(--sand);opacity:.7;letter-spacing:.1em;">Legal</h6>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><a href="<?= $COMPANY_BASE ?>/faq.php">FAQ</a></li>
-                        <li class="mb-2"><a href="<?= $COMPANY_BASE ?>/terms.php">Syarat &amp; Ketentuan</a></li>
-                        <li class="mb-2"><a href="<?= $COMPANY_BASE ?>/privacy.php">Privacy Policy</a></li>
+                <div>
+                    <h2>Jelajahi</h2>
+                    <ul>
+                        <li><a href="<?= $COMPANY_BASE ?>/menu.php">Menu</a></li>
+                        <li><a href="<?= $COMPANY_BASE ?>/about.php">Cerita kami</a></li>
+                        <li><a href="<?= $COMPANY_BASE ?>/blog.php">Jurnal</a></li>
+                        <li><a href="<?= $APP_BASE ?>/customer/register.php">Daftar member</a></li>
                     </ul>
                 </div>
-                <div class="col-lg-4">
-                    <h6 class="text-uppercase small fw-bold mb-3" style="color:var(--sand);opacity:.7;letter-spacing:.1em;">Kunjungi Kami</h6>
-                    <ul class="list-unstyled small">
-                        <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>Lippo Mall Kemang, Lantai GF No. 12, Jl. Pangeran Antasari No.36, Jakarta Selatan 12150</li>
-                        <li class="mb-2"><i class="bi bi-telephone me-2"></i>+62 21 1234 5678</li>
-                        <li class="mb-2"><i class="bi bi-envelope me-2"></i>hello@tokopi.id</li>
-                        <li class="mb-2"><i class="bi bi-clock me-2"></i>Setiap hari, 08.00 – 22.00 WIB</li>
+                <div>
+                    <h2>Bantuan</h2>
+                    <ul>
+                        <li><a href="<?= $COMPANY_BASE ?>/faq.php">FAQ</a></li>
+                        <li><a href="<?= $COMPANY_BASE ?>/contact.php">Kontak</a></li>
+                        <li><a href="<?= $COMPANY_BASE ?>/terms.php">Syarat &amp; ketentuan</a></li>
+                        <li><a href="<?= $COMPANY_BASE ?>/privacy.php">Kebijakan privasi</a></li>
                     </ul>
                 </div>
             </div>
-            <hr class="footer-divider">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small" style="opacity:.7;">
-                <span>&copy; <?= date('Y') ?> Tokopi. Semua hak dilindungi.</span>
-                <span class="mt-2 mt-md-0">Dibuat dengan <i class="bi bi-cup-hot"></i> untuk pecinta kopi.</span>
+            <div class="p-foot-bottom">
+                <span>&copy; <?= date('Y') ?> Tokopi</span>
+                <span>hello@tokopi.id · +62 21 1234 5678</span>
             </div>
         </div>
     </footer>
 
-    <style>
-        .footer-tokopi { background: var(--espresso-dark); color: var(--sand); padding: 4rem 0 1.5rem; margin-top: 6rem; }
-        .footer-tokopi a { color: var(--sand); text-decoration: none; transition: color 0.2s; }
-        .footer-tokopi a:hover { color: #fff; }
-        .footer-divider { border-color: rgba(225,220,201,.15); margin: 2rem 0 1rem; opacity: 1; }
-        .footer-social { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        .footer-social:hover { background: rgba(225,220,201,.15); }
-        @media (max-width: 576px) { .footer-tokopi { padding: 3rem 0 1.25rem; } }
-    </style>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     (function () {
-        'use strict';
+        // Navbar: garis bawah saat discroll
+        var nav = document.getElementById('pNav');
+        var onScroll = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+        onScroll(); window.addEventListener('scroll', onScroll, { passive: true });
 
-        // Fade-in on scroll
-        if ('IntersectionObserver' in window) {
-            var observer = new IntersectionObserver(function (entries) {
-                entries.forEach(function (entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
-
-            document.querySelectorAll('.fade-in-up').forEach(function (el) {
-                observer.observe(el);
-            });
-        } else {
-            document.querySelectorAll('.fade-in-up').forEach(function (el) {
-                el.classList.add('is-visible');
-            });
+        // Menu mobile
+        var burger = document.getElementById('pBurger'), menu = document.getElementById('pMenu');
+        function setOpen(o) {
+            menu.classList.toggle('open', o);
+            burger.setAttribute('aria-expanded', o ? 'true' : 'false');
+            burger.innerHTML = '<i class="bi ' + (o ? 'bi-x-lg' : 'bi-list') + '" aria-hidden="true"></i>';
         }
+        burger.addEventListener('click', function () { setOpen(!menu.classList.contains('open')); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+        menu.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { setOpen(false); }); });
 
-        // Auto-close mobile nav
-        var navCollapse = document.getElementById('navPublic');
-        if (navCollapse && window.bootstrap) {
-            navCollapse.querySelectorAll('.nav-link, .btn').forEach(function (link) {
-                link.addEventListener('click', function () {
-                    if (window.innerWidth < 992) {
-                        var bs = window.bootstrap.Collapse.getInstance(navCollapse);
-                        if (bs) bs.hide();
-                    }
-                });
-            });
-        }
+        // Reveal (dipakai hemat). Konten tetap terlihat bila JS/IO tidak ada.
+        var els = document.querySelectorAll('.reveal');
+        if (!('IntersectionObserver' in window)) { els.forEach(function (el) { el.classList.add('in'); }); return; }
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+        }, { rootMargin: '0px 0px -40px 0px' });
+        els.forEach(function (el) { io.observe(el); });
     })();
     </script>
 </body>

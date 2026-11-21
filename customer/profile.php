@@ -1,12 +1,11 @@
 <?php
 require_once __DIR__ . '/../config/bootstrap.php';
 
-if (empty($_SESSION['customer_table_id'])) {
-    redirect('/tokopi/customer/t.php');
-}
+// Blokir redirect DIHAPUS.
 
-$table_nama  = $_SESSION['customer_table_nama'];
-$outlet_nama = $_SESSION['customer_outlet_nama'];
+$has_table = !empty($_SESSION['customer_table_id']);
+$table_nama  = $_SESSION['customer_table_nama'] ?? 'Belum Scan Meja';
+$outlet_nama = $_SESSION['customer_outlet_nama'] ?? 'Tokopi';
 
 // Cek apakah sudah login akun
 $is_logged_in = !empty($_SESSION['customer_account_id']);
@@ -32,7 +31,7 @@ if ($is_logged_in) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-    <link href="/tokopi/assets/css/app.css" rel="stylesheet">
+    <link href="/tokopi/assets/css/app.css?v=20261121f" rel="stylesheet">
     <style>
         /* Profile-specific tier badges */
         .tier-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: var(--radius-pill); font-size: var(--text-xs); font-weight: var(--font-extrabold); letter-spacing: 0.05em; text-transform: uppercase; }
@@ -77,11 +76,16 @@ if ($is_logged_in) {
         .profile-header::before { content: ''; position: absolute; top: -80px; right: -80px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(225,220,201,.15) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
         .profile-name { font-family: var(--font-serif); font-size: var(--text-2xl); font-weight: var(--font-bold); margin-bottom: var(--space-1); position: relative; z-index: 1; }
         .profile-email { font-size: var(--text-sm); color: var(--color-sand); position: relative; z-index: 1; }
+                /* FIX PADDING BAWAH BIAR GAK KETUTUP NAV */
+        body {
+            padding-bottom: 90px !important; 
+            background: var(--color-bg) !important;
+        }
     </style>
+    <link href="/tokopi/assets/css/customer.css?v=20261121d" rel="stylesheet">
 </head>
 
-<body class="customer-layout">
-
+<body>
     <?php if ($is_logged_in): ?>
 
         <!-- PROFILE HEADER -->
@@ -148,13 +152,20 @@ if ($is_logged_in) {
         <!-- INFO TABLE -->
         <div class="menu-list">
             <div class="menu-item-link" style="cursor:default;">
-                <i class="bi bi-geo-alt"></i>
+                <i class="bi <?= $has_table ? 'bi-geo-alt' : 'bi-exclamation-circle text-danger' ?>"></i>
                 <span class="label" style="font-size:var(--text-sm); font-weight:var(--font-medium);">
-                    Meja: <strong><?= e($table_nama) ?></strong><br>
-                    Outlet: <strong><?= e($outlet_nama) ?></strong>
+                    <?php if ($has_table): ?>
+                        Meja: <strong><?= e($table_nama) ?></strong><br>
+                        Outlet: <strong><?= e($outlet_nama) ?></strong>
+                    <?php else: ?>
+                        <span class="text-danger">Belum scan meja</span><br>
+                        Silakan scan QR di meja untuk memesan.
+                    <?php endif; ?>
                 </span>
             </div>
         </div>
+        
+        <?php if ($has_table): ?>
         <div class="menu-list">
         <a href="/tokopi/customer/reset_table.php" class="menu-item-link" onclick="return confirm('Lupakan meja saat ini? Kamu harus scan QR ulang untuk memesan.');">
             <i class="bi bi-x-circle text-danger"></i>
@@ -162,6 +173,7 @@ if ($is_logged_in) {
             <i class="bi bi-chevron-right arrow"></i>
         </a>
         </div>
+        <?php endif; ?>
 
         <!-- LOGOUT ACCOUNT -->
         <a href="/tokopi/customer/logout_account.php" class="logout-btn"
@@ -173,13 +185,13 @@ if ($is_logged_in) {
 
         <!-- GUEST MODE -->
         <div class="profile-header" style="padding-bottom:var(--space-12);">
-            <div class="profile-avatar">👤</div>
+            <div class="profile-avatar"><i class="bi bi-person" aria-hidden="true"></i></div>
             <div class="profile-name">Pelanggan Tamu</div>
             <div class="profile-email">Login untuk dapat poin & reward</div>
         </div>
 
         <div class="guest-card">
-            <div class="guest-icon">🎁</div>
+            <div class="guest-icon"><i class="bi bi-gift" aria-hidden="true"></i></div>
             <div class="guest-title">Daftar & Dapat Poin</div>
             <div class="guest-desc">
                 Dapatkan <strong>1 poin</strong> setiap Rp 10.000 belanja.
@@ -196,10 +208,15 @@ if ($is_logged_in) {
 
         <div class="menu-list">
             <div class="menu-item-link" style="cursor:default;">
-                <i class="bi bi-geo-alt"></i>
+                <i class="bi <?= $has_table ? 'bi-geo-alt' : 'bi-exclamation-circle text-danger' ?>"></i>
                 <span class="label" style="font-size:var(--text-sm); font-weight:var(--font-medium);">
-                    Meja: <strong><?= e($table_nama) ?></strong><br>
-                    Outlet: <strong><?= e($outlet_nama) ?></strong>
+                    <?php if ($has_table): ?>
+                        Meja: <strong><?= e($table_nama) ?></strong><br>
+                        Outlet: <strong><?= e($outlet_nama) ?></strong>
+                    <?php else: ?>
+                        <span class="text-danger">Belum scan meja</span><br>
+                        Silakan scan QR di meja untuk memesan.
+                    <?php endif; ?>
                 </span>
             </div>
         </div>
@@ -220,11 +237,10 @@ if ($is_logged_in) {
         <a href="/tokopi/customer/profile.php" class="nav-item active">
             <i class="bi bi-person"></i>Profile
         </a>
-
     </div>
 
-    <script src="/tokopi/assets/js/cart.js"></script>
-    <script src="/tokopi/assets/js/ui.js"></script>
+    <script src="/tokopi/assets/js/cart.js?v=20261121d"></script>
+    <script src="/tokopi/assets/js/ui.js?v=20261121b"></script>
 </body>
 
 </html>

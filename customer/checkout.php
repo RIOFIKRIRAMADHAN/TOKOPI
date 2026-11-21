@@ -17,8 +17,8 @@ $customer_name = $_SESSION['customer_account_name'] ?? '';
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#412D15">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2D1B0A">
     <title>Checkout · Tokopi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -304,37 +304,45 @@ $customer_name = $_SESSION['customer_account_name'] ?? '';
             margin-bottom: 16px;
         }
     </style>
+    <link href="/tokopi/assets/css/customer.css?v=20261121d" rel="stylesheet">
 </head>
 
 <body>
 
     <div class="page-header">
-        <a href="/tokopi/customer/cart.php" class="back">
-            <i class="bi bi-arrow-left"></i>
+        <a href="/tokopi/customer/cart.php" class="back" aria-label="Kembali ke keranjang">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
         </a>
         <h1>Checkout</h1>
         <p>Isi data untuk pesanan kamu · <?= htmlspecialchars($table_nama) ?></p>
     </div>
 
+    <ol class="cx-steps" aria-label="Langkah pemesanan">
+        <li class="done">Keranjang</li>
+        <li class="current" aria-current="step">Data & bayar</li>
+        <li>Pesanan diproses</li>
+    </ol>
+
     <div class="co-form">
-        <label>Nama untuk dipanggil <span style="color:var(--red)">*</span></label>
-        <input type="text" id="customer-name" class="co-input" placeholder="Contoh: Rayhan" maxlength="40" required value="<?= e($customer_name) ?>">
+        <label for="customer-name">Nama untuk dipanggil <span style="color:var(--red)" aria-hidden="true">*</span></label>
+        <input type="text" id="customer-name" class="co-input" placeholder="Contoh: Rayhan" maxlength="40" required autocomplete="given-name" aria-describedby="name-error" value="<?= e($customer_name) ?>">
+        <div class="field-error" id="name-error" hidden><i class="bi bi-exclamation-circle" aria-hidden="true"></i> Isi nama supaya barista bisa memanggilmu.</div>
 
-        <label>Nomor HP <span class="opt">(opsional)</span></label>
-        <input type="tel" id="customer-phone" class="co-input" placeholder="08xxxxxxxxxx" maxlength="15">
+        <label for="customer-phone">Nomor HP <span class="opt">(opsional)</span></label>
+        <input type="tel" id="customer-phone" class="co-input" placeholder="08xxxxxxxxxx" maxlength="15" inputmode="tel" autocomplete="tel">
 
-        <label style="margin-top:26px;">Metode Pembayaran</label>
-        <div class="payment-options" id="payment-options">
-            <div class="payment-opt active" data-method="QRIS">
-                <div class="payment-icon">📱</div>
+        <label id="pay-label" style="margin-top:26px;">Metode Pembayaran</label>
+        <div class="payment-options" id="payment-options" role="radiogroup" aria-labelledby="pay-label">
+            <div class="payment-opt active" data-method="QRIS" role="radio" aria-checked="true" tabindex="0">
+                <div class="payment-icon"><i class="bi bi-qr-code" aria-hidden="true"></i></div>
                 <div class="payment-info">
                     <div class="payment-name">QRIS</div>
                     <div class="payment-desc">Scan & bayar langsung dari HP</div>
                 </div>
                 <div class="payment-check"></div>
             </div>
-            <div class="payment-opt" data-method="CASH">
-                <div class="payment-icon">💵</div>
+            <div class="payment-opt" data-method="CASH" role="radio" aria-checked="false" tabindex="-1">
+                <div class="payment-icon"><i class="bi bi-cash-coin" aria-hidden="true"></i></div>
                 <div class="payment-info">
                     <div class="payment-name">Bayar di Kasir</div>
                     <div class="payment-desc">Pesan dulu, bayar tunai ke kasir</div>
@@ -380,6 +388,8 @@ $customer_name = $_SESSION['customer_account_name'] ?? '';
             <span class="total" id="cta-total">Rp 0</span>
         </button>
     </div>
+
+    <div class="tk-toast error" id="tkToast" role="alert"></div>
 
     <div class="loading-overlay" id="loading">
         <div class="spinner-border" role="status"></div>
@@ -540,24 +550,66 @@ $customer_name = $_SESSION['customer_account_name'] ?? '';
             return total;
         };
 
+        function showError(msg) {
+            const t = document.getElementById('tkToast');
+            t.innerHTML = '<i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> ' + msg;
+            t.classList.add('show');
+            clearTimeout(t._h);
+            t._h = setTimeout(() => t.classList.remove('show'), 5000);
+        }
+
+        // Validasi nama inline
+        const nameInput = document.getElementById('customer-name');
+        nameInput.addEventListener('input', () => {
+            if (nameInput.value.trim()) {
+                nameInput.classList.remove('is-invalid');
+                nameInput.removeAttribute('aria-invalid');
+                document.getElementById('name-error').hidden = true;
+            }
+        });
+
+        // Metode bayar: bisa dipilih dengan keyboard (panah / spasi / enter)
+        (function () {
+            const opts = Array.from(document.querySelectorAll('.payment-opt'));
+            const sync = () => opts.forEach(o => {
+                const on = o.classList.contains('active');
+                o.setAttribute('aria-checked', on ? 'true' : 'false');
+                o.tabIndex = on ? 0 : -1;
+            });
+            opts.forEach((o, i) => {
+                o.addEventListener('click', () => setTimeout(sync, 0));
+                o.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); o.click(); }
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        const n = opts[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : opts.length - 1)) % opts.length];
+                        n.click(); n.focus();
+                    }
+                });
+            });
+        })();
+
         async function submitOrder() {
             const nama = document.getElementById('customer-name').value.trim();
             const phone = document.getElementById('customer-phone').value.trim();
 
             if (nama === '') {
-                alert('Nama wajib diisi — untuk dipanggil oleh barista');
-                document.getElementById('customer-name').focus();
+                nameInput.classList.add('is-invalid');
+                nameInput.setAttribute('aria-invalid', 'true');
+                document.getElementById('name-error').hidden = false;
+                nameInput.focus();
                 return;
             }
 
             const items = Object.values(cart).map(it => ({
                 variant_id: it.variant_id,
                 qty: it.qty,
-                note: it.note || ''
+                note: it.note || '',
+                modifiers: (it.modifiers || []).map(m => m.id)
             }));
 
             if (items.length === 0) {
-                alert('Keranjang kosong');
+                showError('Keranjang kosong. Tambahkan menu dulu, ya.');
                 return;
             }
 
@@ -598,28 +650,27 @@ $customer_name = $_SESSION['customer_account_name'] ?? '';
                 } catch (jsonErr) {
                     resetLoading();
                     console.error('Backend response bukan JSON:', rawText);
-                    alert('Error backend. Cek Console (F12) untuk detail.');
+                    showError('Pesanan belum terkirim karena ada gangguan di server. Coba lagi sebentar lagi, atau pesan lewat kasir.');
                     return;
                 }
 
                 if (!res.ok || !data.success) {
                     resetLoading();
-                    alert('Gagal: ' + (data.message || 'Terjadi kesalahan'));
+                    showError(data.message || 'Pesanan belum berhasil dibuat. Coba lagi.');
                     return;
                 }
 
-                // Sukses — bersihkan cart
-                localStorage.removeItem('tokopi_cart');
 
 
                 // Redirect berdasarkan metode
                 if (paymentMethod === 'QRIS') {
                     if (!data.qr_url) {
                         resetLoading();
-                        alert('QRIS tidak tersedia. Coba lagi atau hubungi kasir.');
+                        showError('QRIS sedang tidak tersedia. Pilih "Bayar di Kasir" atau coba lagi.');
                         return;
                     }
 
+                    localStorage.removeItem('tokopi_cart');
                     sessionStorage.setItem('tokopi_pending_order', JSON.stringify({
                         order_id: data.order_id,
                         order_no: data.order_no,
@@ -632,23 +683,23 @@ $customer_name = $_SESSION['customer_account_name'] ?? '';
                     // Cash → redirect ke halaman "tunggu bayar di kasir"
                     if (!data.order_id) {
                         resetLoading();
-                        alert('Order ID tidak valid dari server.');
+                        showError('Pesanan belum tercatat. Coba lagi atau hubungi kasir.');
                         return;
                     }
+                    localStorage.removeItem('tokopi_cart');
                     window.location.href = '/tokopi/customer/waiting_cash.php?order_id=' + data.order_id;
                 }
             } catch (e) {
                 resetLoading();
                 console.error(e);
-                alert('Error: ' + e.message);
+                showError('Koneksi terputus. Periksa internet kamu lalu coba lagi.');
             }
         }
 
         // Init
         cart = ambilCart();
         if (Object.keys(cart).length === 0) {
-            alert('Keranjang kosong, redirect ke menu');
-            window.location.href = '/tokopi/customer/menu.php';
+            window.location.replace('/tokopi/customer/menu.php');
         }
         renderSummary();
         updateButtonLabel();

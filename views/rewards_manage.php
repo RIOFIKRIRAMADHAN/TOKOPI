@@ -63,7 +63,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th class="text-end">Value</th>
                     <th>Produk</th>
                     <th class="text-center">Status</th>
-                    <th class="text-end">Aksi</th>
+                    <th data-nosort class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -73,7 +73,7 @@ require_once __DIR__ . '/../includes/header.php';
                     </tr>
                 <?php else: ?>
                     <?php foreach ($rewards as $r):
-                        $type_label = $r['type'] === 'FREE_ITEM' ? '☕ Gratis Item' : ($r['type'] === 'DISCOUNT_NOMINAL' ? '💰 Diskon Nominal' : '🏷️ Diskon %');
+                        $type_label = $r['type'] === 'FREE_ITEM' ? 'Gratis Item' : ($r['type'] === 'DISCOUNT_NOMINAL' ? 'Diskon Nominal' : 'Diskon %');
                         $value_disp = $r['type'] === 'FREE_ITEM' ? '-' : ($r['type'] === 'DISCOUNT_NOMINAL' ? rupiah($r['value']) : $r['value'] . '%');
                     ?>
                         <tr>

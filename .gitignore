@@ -13,5 +13,6 @@ _debug_*.php
 _test_*.php
 seed_*.php
 
-# User uploads
-/uploads/
+# User uploads (file upload tidak di-commit, kecuali aturan keamanan folder)
+/uploads/*
+!/uploads/.htaccess

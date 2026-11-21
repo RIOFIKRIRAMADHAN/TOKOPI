@@ -31,8 +31,8 @@ if (!$order) {
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#412D15">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2D1B0A">
     <title>Lacak Pesanan · Tokopi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -188,6 +188,7 @@ if (!$order) {
             font-size: 0.95rem;
         }
     </style>
+    <link href="/tokopi/assets/css/customer.css?v=20261121d" rel="stylesheet">
 </head>
 <body>
 

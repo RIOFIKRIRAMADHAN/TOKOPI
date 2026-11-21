@@ -1,193 +1,172 @@
 <?php
-// company/contact.php
+// company/contact.php — Cabang & Kontak
 require_once __DIR__ . '/../config/bootstrap.php';
 
-$page_title = 'Contact — Tokopi';
+$page_title = 'Cabang & kontak';
+$page_desc  = 'Alamat, jam buka, dan kontak semua cabang Tokopi. Kirim pesan untuk kerja sama atau pertanyaan.';
 $active_nav = 'contact';
 require_once __DIR__ . '/../includes/header_public.php';
 
-// Ambil status flash message
 $success = flash_get('success');
 $error   = flash_get('error');
 ?>
 
-<style>
-    .page-hero {
-        background: linear-gradient(135deg, var(--espresso) 0%, var(--espresso-dark) 100%);
-        color: #fff; padding: 5rem 0 4rem;
-        position: relative; overflow: hidden;
-    }
-    .page-hero::before {
-        content: ''; position: absolute; inset: 0;
-        background: radial-gradient(circle at 80% 20%, rgba(225,220,201,.08) 0%, transparent 55%);
-        pointer-events: none;
-    }
-    .page-hero > .container { position: relative; z-index: 1; }
-    .page-title {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(2rem, 4vw, 3.25rem);
-        font-weight: 700; line-height: 1.15; letter-spacing: -0.02em;
-    }
-
-    .contact-card {
-        background: #fff;
-        border-radius: 1.5rem;
-        padding: 3rem;
-        border: 1px solid rgba(65,45,21,.08);
-        box-shadow: 0 8px 32px rgba(65,45,21,.06);
-    }
-
-    .contact-info-item {
-        display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;
-    }
-    .contact-icon {
-        width: 48px; height: 48px; border-radius: 12px;
-        background: var(--sand); color: var(--espresso);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.25rem; flex-shrink: 0;
-    }
-    
-    .form-control {
-        border-radius: 0.75rem; padding: 0.875rem 1rem;
-        border: 1px solid rgba(65,45,21,.15);
-        background: var(--bg-alt);
-    }
-    .form-control:focus {
-        border-color: var(--espresso);
-        box-shadow: 0 0 0 0.25rem rgba(65,45,21,.1);
-        background: #fff;
-    }
-    .form-label { font-weight: 600; font-size: 0.85rem; color: var(--espresso); }
-
-    .map-container {
-        border-radius: 1.5rem; overflow: hidden; border: 1px solid rgba(65,45,21,.08);
-        box-shadow: 0 4px 24px rgba(65,45,21,.06);
-    }
-
-    /* Honeypot field (wajib ada tapi disembunyikan) */
-    .hp-field { display: none !important; }
-
-    @media (max-width: 576px) {
-        .page-hero { padding: 3.5rem 0 3rem; }
-        .contact-card { padding: 1.5rem; border-radius: 1rem; }
-    }
-</style>
-
-<!-- PAGE HERO -->
-<section class="page-hero">
-  <div class="container text-center">
-    <span class="eyebrow" style="color:var(--accent);">Kontak</span>
-    <h1 class="page-title mt-3 mb-3">Mari Terhubung</h1>
-    <p class="lead mx-auto" style="max-width:38rem;opacity:.9;">
-      Punya pertanyaan, saran, atau ingin bekerja sama? Kami senang mendengar dari Anda.
-    </p>
-  </div>
-</section>
-
-<!-- KONTEN KONTAK -->
-<section style="padding:4rem 0;">
-  <div class="container">
-    
-    <?php if ($success): ?>
-      <div class="alert alert-success border-0 shadow-sm mb-4" style="border-radius:1rem;">
-        <i class="bi bi-check-circle-fill me-2"></i> <?= e($success) ?>
-      </div>
-    <?php endif; ?>
-    <?php if ($error): ?>
-      <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius:1rem;">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= e($error) ?>
-      </div>
-    <?php endif; ?>
-
-    <div class="row g-5">
-      <!-- KIRI: Info -->
-      <div class="col-lg-5 fade-in-up">
-        <h2 class="section-title display-6 mb-4">Informasi Kontak</h2>
-        
-        <div class="contact-info-item">
-          <div class="contact-icon"><i class="bi bi-geo-alt-fill"></i></div>
-          <div>
-            <h6 class="fw-bold mb-1" style="color:var(--espresso);">Alamat Utama</h6>
-            <p class="text-secondary mb-0">Lippo Mall Kemang, Lantai GF No. 12, Jl. Pangeran Antasari No.36, Jakarta Selatan 12150</p>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
-          <div>
-            <h6 class="fw-bold mb-1" style="color:var(--espresso);">Telepon</h6>
-            <p class="text-secondary mb-0">+62 21 1234 5678</p>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
-          <div>
-            <h6 class="fw-bold mb-1" style="color:var(--espresso);">Email</h6>
-            <p class="text-secondary mb-0">hello@tokopi.id</p>
-          </div>
-        </div>
-        <div class="contact-info-item">
-          <div class="contact-icon"><i class="bi bi-clock-fill"></i></div>
-          <div>
-            <h6 class="fw-bold mb-1" style="color:var(--espresso);">Jam Operasional</h6>
-            <p class="text-secondary mb-0">Senin - Minggu, 08.00 – 22.00 WIB</p>
-          </div>
-        </div>
-
-        <div class="map-container mt-4">
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3966.1281547726275!2d106.812949!3d-6.260749!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNsKwMTUnMzguNyJTIDEwNsKwNDgnNDYuNiJF!5e0!3m2!1sid!2sid!4v1620000000000!5m2!1sid!2sid" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-        </div>
-      </div>
-
-      <!-- KANAN: Form -->
-      <div class="col-lg-7 fade-in-up" style="transition-delay:150ms;">
-        <div class="contact-card">
-          <h3 class="section-title fs-3 mb-2">Kirim Pesan</h3>
-          <p class="text-secondary small mb-4">Kami akan membalas pesan Anda melalui email maksimal 1x24 jam.</p>
-          
-          <form action="<?= $COMPANY_BASE ?>/contact_submit.php" method="POST">
-            <?= csrf_field() ?>
-            
-            <!-- HONEYPOT (Umpan untuk Bot) -->
-            <div class="hp-field">
-              <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off">
-            </div>
-
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
-                <input type="text" name="nama" class="form-control" required placeholder="Nama kamu">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Email <span class="text-danger">*</span></label>
-                <input type="email" name="email" class="form-control" required placeholder="email@contoh.com">
-              </div>
-            </div>
-
-            <div class="row g-3 mb-3">
-              <div class="col-md-6">
-                <label class="form-label">No. HP (Opsional)</label>
-                <input type="text" name="phone" class="form-control" placeholder="08xxxxx">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Subjek <span class="text-danger">*</span></label>
-                <input type="text" name="subject" class="form-control" required placeholder="Topik pesan">
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label class="form-label">Pesan <span class="text-danger">*</span></label>
-              <textarea name="message" class="form-control" rows="5" required placeholder="Tulis pesanmu di sini..."></textarea>
-            </div>
-
-            <button type="submit" class="btn btn-espresso w-100 py-3 rounded-3">
-              <i class="bi bi-send-fill me-2"></i> Kirim Pesan
-            </button>
-          </form>
-        </div>
-      </div>
+<section class="page-intro">
+    <div class="wrap">
+        <div class="kicker"><b><?= count($PUBLIC_OUTLETS) ?></b> cabang · <?= e($PUBLIC_HOURS['label']) ?></div>
+        <h1>Cabang &amp; kontak</h1>
+        <p class="lead">Datang langsung, telepon cabang, atau tulis pesan lewat form di bawah.</p>
     </div>
-
-  </div>
 </section>
+
+<?php
+$map_q = 'outlet_map_query';
+$first = $PUBLIC_OUTLETS[0] ?? null;
+?>
+<?php if ($PUBLIC_OUTLETS): ?>
+<section class="section-tight">
+    <div class="wrap">
+        <div class="locator">
+            <div class="locator-list" role="tablist" aria-label="Pilih cabang">
+                <?php foreach ($PUBLIC_OUTLETS as $i => $o): ?>
+                    <button type="button" class="loc-item <?= $i === 0 ? 'active' : '' ?>" role="tab"
+                        id="cabang-<?= (int)$o['id'] ?>"
+                        aria-selected="<?= $i === 0 ? 'true' : 'false' ?>" aria-controls="mapFrame"
+                        data-q="<?= e($map_q($o)) ?>" data-name="<?= e(outlet_short($o['nama'])) ?>">
+                        <span class="loc-head">
+                            <span class="loc-name"><?= e(outlet_short($o['nama'])) ?></span>
+                            <span class="code"><?= e($o['code']) ?></span>
+                        </span>
+                        <span class="loc-addr"><?= e($o['alamat'] ?: 'Jakarta') ?></span>
+                        <span class="loc-meta">
+                            <span><i class="bi bi-clock" aria-hidden="true"></i> <?= e($PUBLIC_HOURS['label']) ?></span>
+                            <?php if (!empty($o['no_hp'])): ?><span><i class="bi bi-telephone" aria-hidden="true"></i> <?= e($o['no_hp']) ?></span><?php endif; ?>
+                        </span>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+            <div class="locator-map">
+                <iframe id="mapFrame" title="Peta lokasi Tokopi <?= e(outlet_short($first['nama'])) ?>"
+                    src="https://maps.google.com/maps?q=<?= urlencode($map_q($first)) ?>&amp;z=15&amp;output=embed"
+                    loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+            </div>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<section class="section-tight" style="background:var(--p-paper-2);">
+    <div class="wrap contact-wrap">
+        <div class="contact-aside">
+            <div class="kicker"><b>Pesan</b></div>
+            <h2 class="h-lg">Tulis ke kami.</h2>
+            <p class="muted" style="margin-top:12px;">Untuk kerja sama, acara, pesanan jumlah besar, atau masukan. Kami membalas lewat email.</p>
+            <ul class="contact-direct">
+                <li><i class="bi bi-envelope" aria-hidden="true"></i><a href="mailto:hello@tokopi.id">hello@tokopi.id</a></li>
+                <li><i class="bi bi-telephone" aria-hidden="true"></i><a href="tel:+622112345678">+62 21 1234 5678</a></li>
+            </ul>
+        </div>
+
+        <div class="form-card">
+            <?php if ($success): ?>
+                <div class="notice ok" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> <span><?= e($success) ?></span></div>
+            <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="notice err" role="alert"><i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i> <span><?= e($error) ?></span></div>
+            <?php endif; ?>
+
+            <form action="<?= $COMPANY_BASE ?>/contact_submit.php" method="POST" novalidate id="contactForm" class="form-grid">
+                <?= csrf_field() ?>
+                <div style="position:absolute;left:-9999px;" aria-hidden="true">
+                    <label>Website <input type="text" name="website_url" value="" tabindex="-1" autocomplete="off"></label>
+                </div>
+
+                <div class="field">
+                    <label for="cNama">Nama</label>
+                    <input type="text" id="cNama" name="nama" required autocomplete="name" placeholder="Nama kamu">
+                </div>
+                <div class="field">
+                    <label for="cEmail">Email</label>
+                    <input type="email" id="cEmail" name="email" required autocomplete="email" placeholder="nama@email.com">
+                </div>
+                <div class="field">
+                    <label for="cPhone">No. HP <span class="muted" style="font-weight:500;">(opsional)</span></label>
+                    <input type="tel" id="cPhone" name="phone" autocomplete="tel" inputmode="tel" placeholder="08xx xxxx xxxx">
+                </div>
+                <div class="field">
+                    <label for="cSubject">Topik</label>
+                    <input type="text" id="cSubject" name="subject" required list="topikList" placeholder="Pilih atau ketik topik">
+                    <datalist id="topikList">
+                        <option value="Kerja sama">
+                        <option value="Acara / reservasi">
+                        <option value="Pesanan jumlah besar">
+                        <option value="Masukan">
+                    </datalist>
+                </div>
+                <div class="field span-2">
+                    <label for="cMsg">Pesan</label>
+                    <textarea id="cMsg" name="message" required rows="4" placeholder="Ceritakan kebutuhanmu…"></textarea>
+                </div>
+                <div class="form-foot span-2">
+                    <span class="muted">Balasan dikirim ke email di atas.</span>
+                    <button type="submit" class="btn-p">Kirim pesan <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<script>
+// Pilih cabang -> peta berpindah
+(function () {
+    var items = document.querySelectorAll('.loc-item');
+    var frame = document.getElementById('mapFrame');
+    if (!frame) return;
+    function select(btn, focus) {
+        items.forEach(function (b) { var on = b === btn; b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+        var q = encodeURIComponent(btn.dataset.q);
+        frame.src = 'https://maps.google.com/maps?q=' + q + '&z=15&output=embed';
+        frame.title = 'Peta lokasi Tokopi ' + btn.dataset.name;
+        if (focus) btn.focus();
+    }
+    items.forEach(function (b, i) {
+        b.tabIndex = i === 0 ? 0 : -1;
+        b.addEventListener('click', function () { select(b); });
+        b.addEventListener('keydown', function (e) {
+            var k = e.key, n = null;
+            if (k === 'ArrowDown' || k === 'ArrowRight') n = items[(i + 1) % items.length];
+            if (k === 'ArrowUp' || k === 'ArrowLeft') n = items[(i - 1 + items.length) % items.length];
+            if (n) { e.preventDefault(); select(n, true); }
+        });
+    });
+    // Link dari footer (#cabang-ID) langsung memilih cabang
+    var h = location.hash && document.querySelector(location.hash + '.loc-item');
+    if (h) select(h);
+})();
+</script>
+<script>
+// Validasi inline: pesan error muncul di bawah field yang bermasalah
+(function () {
+    var f = document.getElementById('contactForm');
+    f.addEventListener('submit', function (e) {
+        var first = null;
+        f.querySelectorAll('[required]').forEach(function (el) {
+            var box = el.closest('.field'), msg = box.querySelector('.err-msg');
+            var bad = !el.value.trim() || (el.type === 'email' && !/^\S+@\S+\.\S+$/.test(el.value));
+            if (bad) {
+                if (!msg) { msg = document.createElement('div'); msg.className = 'err-msg hint'; msg.style.color = '#8A2626'; msg.id = el.id + 'Err'; box.appendChild(msg); }
+                msg.textContent = el.type === 'email' && el.value.trim() ? 'Format email belum benar.' : 'Bagian ini perlu diisi.';
+                el.setAttribute('aria-invalid', 'true');
+                el.setAttribute('aria-describedby', msg.id);
+                el.style.borderColor = '#A83232';
+                first = first || el;
+            } else if (msg) {
+                msg.remove(); el.removeAttribute('aria-invalid'); el.style.borderColor = '';
+            }
+        });
+        if (first) { e.preventDefault(); first.focus(); }
+    });
+})();
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer_public.php'; ?>

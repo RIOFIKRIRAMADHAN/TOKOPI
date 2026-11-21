@@ -30,7 +30,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <th>Penulis</th>
                         <th class="text-center">Status</th>
                         <th class="text-center">Tanggal Publish</th>
-                        <th width="140" class="text-center">Aksi</th>
+                        <th data-nosort width="140" class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>

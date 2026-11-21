@@ -50,8 +50,9 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <div class="card">
+    <div class="d-flex justify-content-end p-2 border-bottom"><div class="table-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="form-control form-control-sm" placeholder="Cari kategori…" aria-label="Cari kategori" data-table-filter="#tbl_categories"></div></div>
     <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table table-hover align-middle mb-0" id="tbl_categories" data-enhance data-page-size="25">
             <thead>
                 <tr>
                     <th width="60">#</th>
@@ -60,7 +61,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th width="120" class="text-center">Urutan</th>
                     <th width="120" class="text-center">Produk</th>
                     <th width="120" class="text-center">Status</th>
-                    <th width="160" class="text-end">Aksi</th>
+                    <th data-nosort width="160" class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -222,4 +223,3 @@ function confirmDelete(id, nama, totalProduk) {
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
-EOF

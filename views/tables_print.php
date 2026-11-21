@@ -70,7 +70,7 @@ $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 
 
 <div class="toolbar">
     <a href="/tokopi/views/tables.php?outlet=<?= (int)$outlet_id ?>">← Kembali</a>
-    <button onclick="window.print()">🖨️ Print Semua</button>
+    <button onclick="window.print()">Print Semua</button>
 </div>
 
 <h2 style="text-align:center; color:#412D15;">

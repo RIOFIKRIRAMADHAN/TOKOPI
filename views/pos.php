@@ -408,8 +408,8 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="mb-2">
                 <label class="form-label small mb-1">Metode Bayar</label>
                 <select class="form-select form-select-sm" id="payment-method">
-                    <option value="CASH">💵 Tunai</option>
-                    <option value="QRIS">📱 QRIS (Midtrans)</option>
+                    <option value="CASH">Tunai</option>
+                    <option value="QRIS">QRIS (Midtrans)</option>
                 </select>
             </div>
 
@@ -517,13 +517,13 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <!-- <div id="qris-dev-tools" class="mt-3" style="display:none;">
                     <hr>
-                    <small class="text-muted">🧪 Dev Tools (localhost only)</small>
+                    <small class="text-muted">Dev Tools (localhost only)</small>
                     <div class="d-flex gap-2 mt-2">
                         <button type="button" class="btn btn-sm btn-success flex-fill" onclick="devMarkPaid()">
-                            ✅ Mark PAID (Mock)
+                            Mark PAID (Mock)
                         </button>
                         <button type="button" class="btn btn-sm btn-danger flex-fill" onclick="devMarkCancel()">
-                            ❌ Mark CANCELLED
+                            Mark CANCELLED
                         </button>
                     </div>
                 </div> -->

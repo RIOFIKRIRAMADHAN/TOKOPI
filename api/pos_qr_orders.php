@@ -55,7 +55,7 @@ $items_by_order = [];
 if (!empty($order_ids)) {
     $placeholders = implode(',', array_fill(0, count($order_ids), '?'));
     $stmt = $pdo->prepare("
-        SELECT order_id, product_nama, variant_nama, qty, note, line_total
+        SELECT order_id, product_nama, variant_nama, qty, note, line_total, modifiers
         FROM order_items
         WHERE order_id IN ($placeholders)
         ORDER BY id
@@ -69,6 +69,7 @@ if (!empty($order_ids)) {
             'variant_nama' => $row['variant_nama'],
             'qty'          => (int)$row['qty'],
             'note'         => $row['note'],
+            'modifiers'    => menu_options_label($row['modifiers']),
             'line_total'   => (float)$row['line_total'],
         ];
     }

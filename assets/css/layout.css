@@ -152,7 +152,7 @@
 
 /* Promo Hero */
 .promo-hero { margin: var(--space-4) var(--space-5) var(--space-2); border-radius: var(--radius-xl); padding: var(--space-5); background: linear-gradient(135deg, var(--color-espresso) 0%, #6b4a26 100%); color: var(--color-text-on-dark); position: relative; overflow: hidden; box-shadow: var(--shadow-md); }
-.promo-hero::after { content: '🎁'; position: absolute; right: -20px; top: -20px; font-size: 8rem; opacity: 0.1; filter: grayscale(100%); pointer-events: none; }
+.promo-hero::after { content: none; position: absolute; right: -20px; top: -20px; font-size: 8rem; opacity: 0.1; filter: grayscale(100%); pointer-events: none; }
 .promo-hero h4 { font-family: var(--font-serif); font-size: var(--text-lg); font-weight: var(--font-bold); margin: 0 0 var(--space-1); position: relative; }
 .promo-hero p { font-size: var(--text-sm); color: var(--color-sand); margin: 0; position: relative; }
 

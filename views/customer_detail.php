@@ -97,7 +97,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
             <div class="text-end">
-                <?php $tier_icon = $customer['tier'] === 'GOLD' ? '🥇' : ($customer['tier'] === 'SILVER' ? '🥈' : '🥉'); ?>
+                <?php $tier_icon = '<i class="bi bi-award-fill" style="color:' . ($customer['tier'] === 'GOLD' ? '#C9A227' : ($customer['tier'] === 'SILVER' ? '#9AA0A6' : '#A9713F')) . '" aria-hidden="true"></i>'; ?>
                 <span class="badge bg-dark" style="font-size:0.85rem; padding:6px 14px;"><?= $tier_icon ?> <?= e($customer['tier']) ?></span>
             </div>
         </div>
@@ -264,9 +264,9 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="mb-3">
                     <label class="form-label">Mode</label>
                     <select name="mode" class="form-select" required>
-                        <option value="add">➕ Tambah Poin</option>
-                        <option value="subtract">➖ Kurangi Poin</option>
-                        <option value="set">🔧 Set ke Angka Baru</option>
+                        <option value="add">Tambah poin</option>
+                        <option value="subtract">Kurangi poin</option>
+                        <option value="set">Set ke angka baru</option>
                     </select>
                 </div>
                 <div class="mb-3">

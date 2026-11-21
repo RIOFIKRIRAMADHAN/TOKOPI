@@ -31,6 +31,16 @@ $stmt = $pdo->prepare("SELECT * FROM product_variants WHERE product_id = ? ORDER
 $stmt->execute([$product_id]);
 $variants = $stmt->fetchAll();
 
+// Grup opsi menu
+$stmt = $pdo->prepare("SELECT g.*, (SELECT COUNT(*) FROM modifier_options o WHERE o.group_id = g.id AND o.is_active = 1) AS n_opt,
+                              (SELECT GROUP_CONCAT(o.nama ORDER BY o.sort_order SEPARATOR ', ') FROM modifier_options o WHERE o.group_id = g.id AND o.is_active = 1) AS opt_names
+                       FROM modifier_groups g WHERE g.tenant_id = ? ORDER BY g.sort_order, g.id");
+$stmt->execute([$tenant_id]);
+$all_groups = $stmt->fetchAll();
+$stmt = $pdo->prepare("SELECT group_id FROM product_modifier_groups WHERE product_id = ?");
+$stmt->execute([$product_id]);
+$linked_groups = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
 $page_title = 'Detail Produk: ' . $product['nama'];
 $active_menu = 'products';
 $success = flash_get('success');
@@ -104,7 +114,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th width="80" class="text-center">Size</th>
                     <th width="160" class="text-end">Harga</th>
                     <th width="110" class="text-center">Status</th>
-                    <th width="140" class="text-end">Aksi</th>
+                    <th data-nosort width="140" class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -337,5 +347,38 @@ require_once __DIR__ . '/../includes/header.php';
         new bootstrap.Modal('#modalHapusVarian').show();
     }
 </script>
+
+<!-- OPSI MENU -->
+<div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span><i class="bi bi-ui-checks me-1" aria-hidden="true"></i> Opsi menu untuk produk ini</span>
+        <a href="/tokopi/views/modifiers.php" class="small">Kelola grup opsi <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div class="card-body">
+        <?php if (!$all_groups): ?>
+            <div class="empty"><i class="bi bi-ui-checks" aria-hidden="true"></i>Belum ada grup opsi. Buat dulu di halaman <a href="/tokopi/views/modifiers.php">Opsi Menu</a>.</div>
+        <?php else: ?>
+            <form action="/tokopi/actions/modifier_action.php?action=product_groups" method="POST">
+                <?= csrf_field() ?>
+                <input type="hidden" name="product_id" value="<?= (int)$product_id ?>">
+                <p class="small text-muted mb-2">Centang grup opsi yang bisa dipilih pelanggan saat memesan <?= e($product['nama']) ?>.</p>
+                <div class="row g-2">
+                    <?php foreach ($all_groups as $g): $on = in_array((int)$g['id'], $linked_groups, true); ?>
+                        <div class="col-md-6 col-xl-4">
+                            <label class="d-flex gap-2 p-2 border rounded-3 h-100" style="cursor:pointer;<?= (int)$g['is_active'] ? '' : 'opacity:.6;' ?>">
+                                <input class="form-check-input mt-1 flex-shrink-0" type="checkbox" name="group_ids[]" value="<?= (int)$g['id'] ?>" <?= $on ? 'checked' : '' ?>>
+                                <span>
+                                    <strong class="small d-block"><?= e($g['nama']) ?><?= (int)$g['is_required'] ? ' <span class="badge bg-dark ms-1">wajib</span>' : '' ?><?= (int)$g['is_active'] ? '' : ' <span class="badge bg-secondary ms-1">nonaktif</span>' ?><?= ($g['applies_to'] ?? 'ALL') !== 'ALL' ? ' <span class="badge bg-light text-dark border ms-1">' . ($g['applies_to'] === 'ICED' ? 'Iced saja' : 'Hot saja') . '</span>' : '' ?></strong>
+                                    <span class="small text-muted"><?= e($g['opt_names'] ?: 'Belum ada pilihan aktif') ?></span>
+                                </span>
+                            </label>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="text-end mt-3"><button type="submit" class="btn btn-espresso btn-sm">Simpan opsi</button></div>
+            </form>
+        <?php endif; ?>
+    </div>
+</div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

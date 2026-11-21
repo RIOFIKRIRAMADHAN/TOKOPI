@@ -9,13 +9,21 @@ $table_nama  = $_SESSION['customer_table_nama'];
 $outlet_nama = $_SESSION['customer_outlet_nama'];
 $table_id    = (int)$_SESSION['customer_table_id'];
 $outlet_id   = (int)$_SESSION['customer_outlet_id'];
+
+// Peta foto produk untuk ditampilkan di keranjang
+$stmt = $pdo->prepare("SELECT p.id, p.nama, p.image_path FROM products p JOIN outlets o ON o.tenant_id = p.tenant_id WHERE o.id = ?");
+$stmt->execute([$outlet_id]);
+$product_imgs = [];
+foreach ($stmt->fetchAll() as $r) {
+    $product_imgs[(int)$r['id']] = product_img($r['image_path'], $r['nama'], 'cart-pimg');
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#412D15">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2D1B0A">
     <title>Keranjang · Tokopi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -85,7 +93,12 @@ $outlet_id   = (int)$_SESSION['customer_outlet_id'];
             margin-bottom: 10px;
             box-shadow: 0 1px 6px rgba(65,45,21,.04);
         }
+        .cart-img .cart-pimg { border-radius: 12px; }
+        .cart-mods { font-size: .75rem; color: var(--espresso); background: var(--sand-50); border-radius: 8px; padding: 4px 8px; margin: 4px 0 2px; display: inline-block; line-height: 1.4; }
+        .cart-mods span { color: var(--text-muted); font-weight: 600; }
+        .cart-img .pimg-ph span { font-size: 1.3rem; }
         .cart-img {
+            overflow: hidden;
             width: 62px;
             height: 62px;
             border-radius: 12px;
@@ -262,16 +275,23 @@ $outlet_id   = (int)$_SESSION['customer_outlet_id'];
             font-size: 1rem;
         }
     </style>
+    <link href="/tokopi/assets/css/customer.css?v=20261121d" rel="stylesheet">
 </head>
 <body>
 
 <div class="page-header">
-    <a href="/tokopi/customer/menu.php" class="back">
-        <i class="bi bi-arrow-left"></i>
+    <a href="/tokopi/customer/menu.php" class="back" aria-label="Kembali ke menu">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
     </a>
     <h1>Keranjang</h1>
-    <p id="cart-count-header">Loading...</p>
+    <p id="cart-count-header">Memuat…</p>
 </div>
+
+<ol class="cx-steps" aria-label="Langkah pemesanan">
+    <li class="current" aria-current="step">Keranjang</li>
+    <li>Data & bayar</li>
+    <li>Pesanan diproses</li>
+</ol>
 
 <div class="cart-container" id="cart-container">
     <!-- Isi dari JS -->
@@ -290,6 +310,8 @@ $outlet_id   = (int)$_SESSION['customer_outlet_id'];
     </div>
 </div>
 
+<div class="tk-toast" id="tkToast" role="status" aria-live="polite"></div>
+
 <div class="sticky-cta" id="sticky-cta" style="display:none;">
     <button class="btn-primary" onclick="lanjutCheckout()">
         <span>Lanjut Checkout</span>
@@ -298,6 +320,7 @@ $outlet_id   = (int)$_SESSION['customer_outlet_id'];
 </div>
 
 <script>
+const PRODUCT_IMG = <?= json_encode($product_imgs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
 const TABLE_INFO = {
     nama: <?= json_encode($table_nama) ?>,
     outlet: <?= json_encode($outlet_nama) ?>
@@ -354,18 +377,19 @@ function render() {
 
         html += `
             <div class="cart-item">
-                <div class="cart-img">☕</div>
+                <div class="cart-img">${PRODUCT_IMG[item.product_id] || '<i class="bi bi-cup-hot" aria-hidden="true"></i>'}</div>
                 <div class="cart-info">
                     <div class="cart-name">${escapeHtml(item.product_nama)}</div>
                     <div class="cart-var">${escapeHtml(item.variant_nama)}</div>
+                    ${item.modifiers && item.modifiers.length ? `<div class="cart-mods">${item.modifiers.map(m => escapeHtml(m.nama) + (m.price > 0 ? ' <span>+' + Math.round(m.price / 1000) + 'rb</span>' : '')).join(' · ')}</div>` : ''}
                     ${item.note ? `<span class="cart-note"><i class="bi bi-pencil"></i> ${escapeHtml(item.note)}</span>` : ''}
                     <div class="cart-foot">
                         <span class="cart-price">${rupiah(lineTotal)}</span>
                         <div class="qty-controls">
-                            <button class="qty-btn-mini" onclick="ubahQty('${key}', -1)" ${item.qty <= 1 ? 'disabled' : ''}>−</button>
-                            <span class="qty-val-mini">${item.qty}</span>
-                            <button class="qty-btn-mini" onclick="ubahQty('${key}', 1)">+</button>
-                            <button class="btn-remove" onclick="hapusItem('${key}')"><i class="bi bi-trash"></i></button>
+                            <button class="qty-btn-mini" onclick="ubahQty('${key}', -1)" ${item.qty <= 1 ? 'disabled' : ''} aria-label="Kurangi ${escapeHtml(item.product_nama)}">−</button>
+                            <span class="qty-val-mini" aria-label="Jumlah">${item.qty}</span>
+                            <button class="qty-btn-mini" onclick="ubahQty('${key}', 1)" aria-label="Tambah ${escapeHtml(item.product_nama)}">+</button>
+                            <button class="btn-remove" onclick="hapusItem('${key}')" aria-label="Hapus ${escapeHtml(item.product_nama)}"><i class="bi bi-trash" aria-hidden="true"></i></button>
                         </div>
                     </div>
                 </div>
@@ -391,18 +415,34 @@ function ubahQty(key, delta) {
     render();
 }
 
+// Hapus langsung + tombol "Urungkan" (lebih cepat daripada dialog konfirmasi)
 function hapusItem(key) {
-    if (!confirm('Hapus item ini dari keranjang?')) return;
     const cart = ambilCart();
+    const removed = cart[key];
+    if (!removed) return;
     delete cart[key];
     simpanCart(cart);
     render();
+    const t = document.getElementById('tkToast');
+    t.innerHTML = '<span style="flex:1">' + escapeHtml(removed.product_nama) + ' dihapus</span>' +
+        '<button type="button" id="undoBtn" style="background:none;border:0;color:#E1DCC9;font-weight:800;min-height:36px;">Urungkan</button>';
+    t.style.pointerEvents = 'auto';
+    t.classList.add('show');
+    clearTimeout(t._h);
+    t._h = setTimeout(() => { t.classList.remove('show'); t.style.pointerEvents = 'none'; }, 4500);
+    document.getElementById('undoBtn').onclick = () => {
+        const c = ambilCart();
+        c[key] = removed;
+        simpanCart(c);
+        render();
+        t.classList.remove('show');
+        t.style.pointerEvents = 'none';
+    };
 }
 
 function lanjutCheckout() {
     const cart = ambilCart();
     if (Object.keys(cart).length === 0) {
-        alert('Keranjang kosong');
         return;
     }
     window.location.href = '/tokopi/customer/checkout.php';

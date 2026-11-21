@@ -1,20 +1,18 @@
 <?php
 require_once __DIR__ . '/../config/bootstrap.php';
 
-if (empty($_SESSION['customer_table_id'])) {
-    redirect('/tokopi/customer/t.php');
-}
+// Blokir redirect DIHAPUS. User bisa lihat riwayat order (meski kosong kalau tanpa meja).
 
-$outlet_id = (int)$_SESSION['customer_outlet_id'];
-$table_id  = (int)$_SESSION['customer_table_id'];
+$outlet_id = (int)($_SESSION['customer_outlet_id'] ?? 0);
+$table_id  = (int)($_SESSION['customer_table_id'] ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#412D15">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2D1B0A">
     <title>Order Saya · Tokopi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -236,6 +234,7 @@ $table_id  = (int)$_SESSION['customer_table_id'];
             color: var(--espresso);
         }
     </style>
+    <link href="/tokopi/assets/css/customer.css?v=20261121d" rel="stylesheet">
 </head>
 
 <body>
@@ -310,7 +309,7 @@ $table_id  = (int)$_SESSION['customer_table_id'];
                 let html = '';
                 data.orders.forEach(o => {
                     const itemsHtml = o.items.slice(0, 3).map(it =>
-                        `<div>${it.qty}× ${escapeHtml(it.product_nama)} · ${escapeHtml(it.variant_nama)}</div>`
+                        `<div>${it.qty}× ${escapeHtml(it.product_nama)} · ${escapeHtml(it.variant_nama)}${it.modifiers ? ` <span style="color:var(--text-muted)">(${escapeHtml(it.modifiers)})</span>` : ''}</div>`
                     ).join('');
                     const more = o.items.length > 3 ? `<div style="color:#999;">+${o.items.length - 3} item lagi</div>` : '';
 

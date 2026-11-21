@@ -29,15 +29,16 @@ require_once __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <div class="card border-0 shadow-sm" style="border-radius:1rem; overflow:hidden;">
+    <div class="d-flex justify-content-end p-2 border-bottom"><div class="table-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="form-control form-control-sm" placeholder="Cari pesan…" aria-label="Cari pesan" data-table-filter="#tbl_contact_inbox"></div></div>
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" id="tbl_contact_inbox" data-enhance data-page-size="25">
             <thead style="background:#FAF9F5;">
                 <tr>
                     <th class="ps-4" style="width:50px;">Status</th>
                     <th>Pengirim</th>
                     <th>Subjek</th>
                     <th>Tanggal</th>
-                    <th class="text-end pe-4" style="width:120px;">Aksi</th>
+                    <th data-nosort class="text-end pe-4" style="width:120px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>

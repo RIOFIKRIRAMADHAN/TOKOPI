@@ -18,7 +18,7 @@ if ($tenant_id > 0) {
         $stmt = $pdo->prepare("
             SELECT
                 c.id AS category_id, c.nama AS category_nama, c.sort_order,
-                p.id AS product_id, p.nama AS product_nama,
+                p.id AS product_id, p.nama AS product_nama, p.description, p.image_path,
                 v.id AS variant_id, v.nama AS variant_nama,
                 v.harga_jual, v.temperature, v.size
             FROM categories c
@@ -45,6 +45,8 @@ if ($tenant_id > 0) {
             if (!isset($menu[$cid]['products'][$pid])) {
                 $menu[$cid]['products'][$pid] = [
                     'nama' => $row['product_nama'],
+                    'description' => $row['description'],
+                    'image_path' => $row['image_path'],
                     'variants' => []
                 ];
             }
@@ -60,213 +62,108 @@ if ($tenant_id > 0) {
     }
 }
 
-$page_title = 'Menu — Tokopi';
+$page_title = 'Menu';
+$page_desc  = 'Menu lengkap Tokopi: kopi, non-kopi, makanan, dan paket hemat, lengkap dengan harga per varian.';
 $active_nav = 'menu';
 require_once __DIR__ . '/../includes/header_public.php';
+$total_items = 0;
+foreach ($menu as $c) $total_items += count($c['products']);
 ?>
 
-<style>
-    .page-hero {
-        background: linear-gradient(135deg, var(--espresso) 0%, var(--espresso-dark) 100%);
-        color: #fff;
-        padding: 5rem 0 4rem;
-        position: relative; overflow: hidden;
-    }
-    .page-hero::before {
-        content: ''; position: absolute; inset: 0;
-        background: radial-gradient(circle at 80% 20%, rgba(225,220,201,.08) 0%, transparent 55%);
-        pointer-events: none;
-    }
-    .page-hero > .container { position: relative; z-index: 1; }
-    .page-title {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(2rem, 4vw, 3.25rem);
-        font-weight: 700; line-height: 1.15; letter-spacing: -0.02em;
-    }
-
-    .menu-nav {
-        display: flex;
-        gap: .5rem;
-        overflow-x: auto;
-        padding-bottom: .75rem;
-        margin-bottom: 3rem;
-        scrollbar-width: none;
-    }
-    .menu-nav::-webkit-scrollbar { display: none; }
-    .menu-nav a {
-        white-space: nowrap;
-        padding: .5rem 1.25rem;
-        background: #fff;
-        border: 1px solid rgba(65,45,21,.12);
-        border-radius: 999px;
-        color: var(--espresso);
-        text-decoration: none;
-        font-size: .875rem;
-        font-weight: 600;
-        transition: all .2s;
-    }
-    .menu-nav a:hover { background: var(--espresso); color: #fff; border-color: var(--espresso); }
-
-    .category-section { margin-bottom: 4rem; scroll-margin-top: 100px; }
-    .category-header {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 2rem;
-    }
-    .category-title {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--espresso);
-        margin: 0;
-        white-space: nowrap;
-    }
-    .category-line { flex: 1; height: 1px; background: rgba(65,45,21,.15); }
-
-    .menu-item {
-        background: #fff;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        border: 1px solid rgba(65,45,21,.08);
-        height: 100%;
-        transition: all .25s ease;
-    }
-    .menu-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(65,45,21,.1);
-    }
-    .product-name {
-        font-family: 'Playfair Display', serif;
-        font-weight: 700;
-        font-size: 1.15rem;
-        color: var(--espresso);
-        margin-bottom: .75rem;
-    }
-    .variant-list { list-style: none; padding: 0; margin: 0; }
-    .variant-list li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: .5rem 0;
-        border-bottom: 1px dashed rgba(65,45,21,.08);
-        font-size: .9rem;
-    }
-    .variant-list li:last-child { border-bottom: none; }
-    .variant-name {
-        color: var(--text-muted);
-        display: flex;
-        align-items: center;
-        gap: .35rem;
-    }
-    .variant-price {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 600;
-        color: var(--espresso);
-        white-space: nowrap;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 5rem 1rem;
-        color: var(--text-muted);
-    }
-    .empty-state i { font-size: 4rem; opacity: .3; margin-bottom: 1rem; }
-
-    @media (max-width: 576px) {
-        .page-hero { padding: 3.5rem 0 3rem; }
-        .category-title { font-size: 1.4rem; }
-        .menu-item { padding: 1.25rem; }
-        .product-name { font-size: 1.05rem; }
-    }
-</style>
-
-<!-- PAGE HERO -->
-<section class="page-hero">
-  <div class="container text-center">
-    <span class="eyebrow" style="color:var(--accent);">Menu Kami</span>
-    <h1 class="page-title mt-3 mb-3">Setiap Cangkir, Pilihan Hati</h1>
-    <p class="lead mx-auto" style="max-width:38rem;opacity:.9;">
-      Dari espresso klasik hingga signature latte — pilih favoritmu, atau biarkan barista kami merekomendasikan.
-    </p>
-  </div>
-</section>
-
-<!-- MENU -->
-<section style="padding:4rem 0;">
-  <div class="container">
-    <?php if (empty($menu)): ?>
-      <div class="empty-state">
-        <i class="bi bi-cup-hot"></i>
-        <h3 class="section-title mt-3 mb-2">Menu Segera Hadir</h3>
-        <p class="mb-0">Kami sedang menyiapkan menu terbaru. Cek kembali sebentar lagi.</p>
-      </div>
-    <?php else: ?>
-
-      <!-- Nav pills ke tiap kategori -->
-      <div class="menu-nav">
-        <?php foreach ($menu as $cid => $cat): ?>
-          <a href="#cat-<?= (int)$cid ?>"><?= htmlspecialchars($cat['nama']) ?></a>
-        <?php endforeach; ?>
-      </div>
-
-      <!-- Sections -->
-      <?php $i = 0; foreach ($menu as $cid => $cat): ?>
-        <div class="category-section" id="cat-<?= (int)$cid ?>">
-          <div class="category-header">
-            <h2 class="category-title"><?= htmlspecialchars($cat['nama']) ?></h2>
-            <div class="category-line"></div>
-          </div>
-          <div class="row g-4">
-            <?php foreach ($cat['products'] as $pid => $prod): ?>
-              <div class="col-md-6 col-lg-4 fade-in-up" style="transition-delay:<?= ($i++ % 3) * 80 ?>ms;">
-                <div class="menu-item">
-                  <h3 class="product-name"><?= htmlspecialchars($prod['nama']) ?></h3>
-                  <ul class="variant-list">
-                    <?php foreach ($prod['variants'] as $v): ?>
-                      <li>
-                        <span class="variant-name">
-                          <?= htmlspecialchars($v['nama']) ?>
-                          <?php if ($v['temperature'] === 'ICED'): ?>
-                            <i class="bi bi-snow text-info"></i>
-                          <?php elseif ($v['temperature'] === 'HOT'): ?>
-                            <i class="bi bi-fire text-danger"></i>
-                          <?php endif; ?>
-                        </span>
-                        <span class="variant-price">
-                          Rp <?= number_format($v['harga'], 0, ',', '.') ?>
-                        </span>
-                      </li>
-                    <?php endforeach; ?>
-                  </ul>
-                </div>
-              </div>
-            <?php endforeach; ?>
-          </div>
-        </div>
-      <?php endforeach; ?>
-
-    <?php endif; ?>
-  </div>
-</section>
-
-<!-- CTA -->
-<section style="padding:0 0 5rem;">
-  <div class="container">
-    <div class="cta-band fade-in-up">
-      <div class="row align-items-center g-4">
-        <div class="col-lg-8">
-          <h2 class="section-title display-6 mb-2" style="color:#fff;">Mau pesan dari meja?</h2>
-          <p class="mb-0" style="color:var(--sand);opacity:.9;">Scan QR di meja, pilih menu, bayar — pesanan langsung masuk dapur. Tanpa antre.</p>
-        </div>
-        <div class="col-lg-4 text-lg-end">
-          <a href="<?= htmlspecialchars($COMPANY_BASE) ?>/contact.php" class="btn btn-light btn-lg px-4 fw-semibold text-dark">
-            <i class="bi bi-geo-alt me-2"></i> Kunjungi Kami
-          </a>
-        </div>
-      </div>
+<section class="page-intro">
+    <div class="wrap">
+        <div class="kicker"><b><?= $total_items ?></b> item · <?= count($menu) ?> kategori</div>
+        <h1>Menu</h1>
+        <p class="lead">Harga di bawah adalah harga per varian. Untuk memesan, scan QR di meja saat kamu di cabang.</p>
     </div>
-  </div>
 </section>
+
+<?php if (empty($menu)): ?>
+    <section class="section">
+        <div class="wrap">
+            <h2 class="h-lg">Menu sedang disiapkan.</h2>
+            <p class="lead" style="margin-top:12px;">Cek lagi sebentar, atau langsung mampir ke cabang terdekat.</p>
+        </div>
+    </section>
+<?php else: ?>
+    <nav class="cat-nav" aria-label="Kategori menu">
+        <div class="wrap" id="catNav">
+            <?php foreach ($menu as $cid => $cat): ?>
+                <a href="#cat-<?= (int)$cid ?>" data-target="cat-<?= (int)$cid ?>"><?= e($cat['nama']) ?></a>
+            <?php endforeach; ?>
+        </div>
+    </nav>
+
+    <section class="section-tight">
+        <div class="wrap" style="max-width:920px;">
+            <?php foreach ($menu as $cid => $cat): ?>
+                <section class="menu-cat" id="cat-<?= (int)$cid ?>" aria-labelledby="h-cat-<?= (int)$cid ?>">
+                    <div class="menu-cat-head">
+                        <h2 id="h-cat-<?= (int)$cid ?>" style="font-size:1.8rem;font-style:italic;"><?= e($cat['nama']) ?></h2>
+                        <span><?= count($cat['products']) ?> item</span>
+                    </div>
+                    <?php foreach ($cat['products'] as $prod):
+                        $prices = array_column($prod['variants'], 'harga');
+                        $min = min($prices);
+                    ?>
+                        <div class="menu-row">
+                            <?= product_img($prod['image_path'], $prod['nama']) ?>
+                            <div>
+                                <h3 style="font-family:var(--p-sans);font-size:17px;font-weight:700;letter-spacing:0;line-height:1.3;"><?= e($prod['nama']) ?></h3>
+                                <?php if (!empty($prod['description'])): ?><p><?= e($prod['description']) ?></p><?php endif; ?>
+                                <?php if (count($prod['variants']) > 1): ?>
+                                    <div class="vars">
+                                        <?php foreach ($prod['variants'] as $v): ?>
+                                            <span>
+                                                <?php if ($v['temperature'] === 'ICED'): ?><i class="bi bi-snow" aria-label="dingin"></i><?php elseif ($v['temperature'] === 'HOT'): ?><i class="bi bi-cup-hot" aria-label="panas"></i><?php endif; ?>
+                                                <?= e($v['nama']) ?> <b>Rp<?= number_format($v['harga'], 0, ',', '.') ?></b>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            <div class="price">Rp<?= number_format($min, 0, ',', '.') ?><?php if (count($prod['variants']) > 1): ?><small>mulai dari</small><?php endif; ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </section>
+            <?php endforeach; ?>
+        </div>
+    </section>
+<?php endif; ?>
+
+<section class="section night">
+    <div class="wrap split even" style="align-items:center;">
+        <div>
+            <div class="kicker"><b>QR</b> Pesan dari meja</div>
+            <h2 class="h-xl">Sudah di cabang? Scan QR di mejamu.</h2>
+        </div>
+        <div>
+            <p class="lead">Pesanan langsung masuk ke barista dengan nomor meja. Bayar QRIS atau tunai di kasir.</p>
+            <div class="hero-actions" style="margin-top:24px;">
+                <a href="<?= $COMPANY_BASE ?>/index.php#cara-pesan" class="btn-p on-dark">Lihat caranya</a>
+                <a href="<?= $COMPANY_BASE ?>/contact.php" class="btn-p on-dark ghost">Cari cabang</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+// Tandai kategori yang sedang terlihat
+(function () {
+    var links = document.querySelectorAll('#catNav a');
+    if (!links.length || !('IntersectionObserver' in window)) return;
+    var map = {}; links.forEach(function (a) { map[a.dataset.target] = a; });
+    var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            links.forEach(function (a) { a.classList.remove('active'); a.removeAttribute('aria-current'); });
+            var a = map[e.target.id]; if (!a) return;
+            a.classList.add('active'); a.setAttribute('aria-current', 'true');
+            a.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    document.querySelectorAll('.menu-cat').forEach(function (s) { io.observe(s); });
+})();
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer_public.php'; ?>

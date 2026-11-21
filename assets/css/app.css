@@ -3,6 +3,7 @@
    Imports all design system modules
    ========================================= */
 
-@import './tokens.css';
-@import './components.css';
-@import './layout.css';
+@import './tokens.css?v=20261121f';
+@import './pimg.css?v=20261121f';
+@import './components.css?v=20261121f';
+@import './layout.css?v=20261121f';

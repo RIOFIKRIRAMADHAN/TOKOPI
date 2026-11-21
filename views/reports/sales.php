@@ -58,6 +58,17 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $summary = $stmt->fetch();
 
+// Periode pembanding: panjang sama, tepat sebelum periode terpilih
+$__days    = (int)round((strtotime($date_to) - strtotime($date_from)) / 86400) + 1;
+$prev_to   = date('Y-m-d', strtotime($date_from . ' -1 day'));
+$prev_from = date('Y-m-d', strtotime($prev_to . ' -' . ($__days - 1) . ' days'));
+$stmt = $pdo->prepare($sql);
+$stmt->execute(array_merge([$prev_from, $prev_to], $tenant_param, $outlet_params));
+$prev = $stmt->fetch();
+$prev_omzet  = (float)$prev['total_omzet'];
+$prev_profit = $prev_omzet - (float)$prev['total_hpp'];
+$prev_orders = (int)$prev['total_order'];
+
 $total_omzet = (float)$summary['total_omzet'];
 $total_hpp   = (float)$summary['total_hpp'];
 $total_profit = $total_omzet - $total_hpp;
@@ -179,50 +190,11 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Filter -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small">Dari Tanggal</label>
-                <input type="date" name="date_from" class="form-control form-control-sm" value="<?= e($date_from) ?>" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small">Sampai Tanggal</label>
-                <input type="date" name="date_to" class="form-control form-control-sm" value="<?= e($date_to) ?>" required>
-            </div>
-
-            <?php if (is_role('owner')): ?>
-                <div class="col-md-3">
-                    <label class="form-label small">Outlet</label>
-                    <select name="outlet" class="form-select form-select-sm">
-                        <option value="0">Semua Outlet</option>
-                        <?php foreach ($outlets as $o): ?>
-                            <option value="<?= (int)$o['id'] ?>" <?= $filter_outlet === (int)$o['id'] ? 'selected' : '' ?>>
-                                <?= e($o['nama']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            <?php endif; ?>
-
-            <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-espresso btn-sm flex-fill">
-                    <i class="bi bi-search me-1"></i> Filter
-                </button>
-                <a href="/tokopi/views/reports/sales.php" class="btn btn-outline-secondary btn-sm">Reset</a>
-            </div>
-        </form>
-
-        <div class="d-flex gap-2 mt-3 pt-3 border-top">
-            <span class="small text-muted me-2">Quick range:</span>
-            <a href="?date_from=<?= date('Y-m-d') ?>&date_to=<?= date('Y-m-d') ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">Hari ini</a>
-            <a href="?date_from=<?= date('Y-m-d', strtotime('-6 days')) ?>&date_to=<?= date('Y-m-d') ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">7 hari</a>
-            <a href="?date_from=<?= date('Y-m-01') ?>&date_to=<?= date('Y-m-d') ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">Bulan ini</a>
-            <a href="?date_from=<?= date('Y-m-01', strtotime('first day of last month')) ?>&date_to=<?= date('Y-m-t', strtotime('last day of last month')) ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">Bulan lalu</a>
-        </div>
-    </div>
-</div>
+<?php
+$report_actions = '<button type="button" class="btn btn-outline-espresso btn-sm" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Print</button>'
+    . '<button type="button" class="btn btn-outline-espresso btn-sm" onclick="exportCSV()"><i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV</button>';
+require __DIR__ . '/../../includes/report_filter.php';
+?>
 
 <!-- Print header (hanya muncul saat print) -->
 <div class="print-only" style="display:none;">
@@ -238,50 +210,68 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <!-- KPI -->
-<div class="row g-3 mb-3">
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">Total Order</div>
-            <div class="money" style="font-size:1.5rem; font-weight:700; color:var(--espresso);">
-                <?= number_format((int)$summary['total_order']) ?>
-            </div>
-        </div>
+<?php
+$aov = (int)$summary['total_order'] > 0 ? $total_omzet / (int)$summary['total_order'] : 0;
+$prev_aov = $prev_orders > 0 ? $prev_omzet / $prev_orders : 0;
+$cmp_label = 'vs ' . date('d/m', strtotime($prev_from)) . '–' . date('d/m', strtotime($prev_to));
+?>
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label">Omzet</div>
+        <div class="kpi-value"><?= rupiah($total_omzet) ?></div>
+        <div class="kpi-foot"><?= delta_badge($total_omzet, $prev_omzet, true, $cmp_label) ?></div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">Omzet</div>
-            <div class="money" style="font-size:1.4rem; font-weight:700; color:var(--espresso);">
-                <?= rupiah($total_omzet) ?>
-            </div>
-        </div>
+    <div class="kpi">
+        <div class="kpi-label">Total order</div>
+        <div class="kpi-value"><?= number_format((int)$summary['total_order'], 0, ',', '.') ?></div>
+        <div class="kpi-foot"><?= delta_badge((int)$summary['total_order'], $prev_orders, true, $cmp_label) ?></div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">HPP</div>
-            <div class="money" style="font-size:1.4rem; font-weight:700; color:#A83232;">
-                <?= rupiah($total_hpp) ?>
-            </div>
-        </div>
+    <div class="kpi">
+        <div class="kpi-label">Laba kotor</div>
+        <div class="kpi-value" style="color:<?= $total_profit < 0 ? 'var(--adm-down)' : 'inherit' ?>"><?= rupiah($total_profit) ?></div>
+        <div class="kpi-foot"><?= delta_badge($total_profit, $prev_profit) ?> <span>margin <?= number_format($margin_pct, 1, ',', '.') ?>%</span></div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">Profit</div>
-            <div class="money" style="font-size:1.4rem; font-weight:700; color:<?= $total_profit >= 0 ? '#2E7D5B' : '#A83232' ?>;">
-                <?= rupiah($total_profit) ?>
-            </div>
-            <small class="text-muted">Margin <?= number_format($margin_pct, 1) ?>%</small>
-        </div>
+    <div class="kpi">
+        <div class="kpi-label">HPP</div>
+        <div class="kpi-value"><?= rupiah($total_hpp) ?></div>
+        <div class="kpi-foot"><span><?= $total_omzet > 0 ? number_format($total_hpp / $total_omzet * 100, 1, ',', '.') : 0 ?>% dari omzet</span></div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label">Rata-rata per order</div>
+        <div class="kpi-value"><?= rupiah($aov) ?></div>
+        <div class="kpi-foot"><?= delta_badge($aov, $prev_aov) ?></div>
     </div>
 </div>
 
-<!-- Export bar -->
-<div class="d-flex gap-2 mb-3" id="export-bar">
-    <button class="btn btn-outline-dark btn-sm" onclick="window.print()">
-        <i class="bi bi-printer me-1"></i> Print / PDF
-    </button>
-    <button class="btn btn-outline-dark btn-sm" onclick="exportCSV()">
-        <i class="bi bi-download me-1"></i> Export CSV
-    </button>
+<!-- Grafik -->
+<div class="row g-3 mb-3">
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between flex-wrap gap-2">
+                <span><i class="bi bi-graph-up me-1" aria-hidden="true"></i> Tren harian</span>
+                <span class="legend-inline"><span style="--c:var(--chart-1)">Omzet</span><span style="--c:var(--chart-2)">Laba kotor</span><span style="--c:var(--chart-3)">Order</span></span>
+            </div>
+            <div class="card-body">
+                <?php if (empty($daily)): ?>
+                    <div class="empty"><i class="bi bi-graph-up" aria-hidden="true"></i>Tidak ada transaksi pada periode ini.</div>
+                <?php else: ?>
+                    <div class="chart-box"><canvas id="chDaily" role="img" aria-label="Grafik omzet, laba, dan order per hari"></canvas></div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-credit-card me-1" aria-hidden="true"></i> Komposisi metode bayar</div>
+            <div class="card-body">
+                <?php if (empty($by_payment)): ?>
+                    <div class="empty"><i class="bi bi-credit-card" aria-hidden="true"></i>Belum ada pembayaran.</div>
+                <?php else: ?>
+                    <div class="chart-box"><canvas id="chPay" role="img" aria-label="Grafik komposisi metode pembayaran"></canvas></div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Perbandingan Outlet (kalau semua) -->
@@ -393,7 +383,7 @@ require_once __DIR__ . '/../../includes/header.php';
                                 <tr>
                                     <td>
                                         <?php
-                                        $icon = $p['method'] === 'CASH' ? '💵' : ($p['method'] === 'QRIS' ? '📱' : '💳');
+                                        $icon = '<i class="bi ' . ($p['method'] === 'CASH' ? 'bi-cash-coin' : ($p['method'] === 'QRIS' ? 'bi-qr-code' : 'bi-credit-card')) . '" aria-hidden="true"></i>';
                                         ?>
                                         <?= $icon ?> <strong><?= e($p['method']) ?></strong>
                                     </td>
@@ -575,6 +565,48 @@ function exportCSV() {
     a.click();
     URL.revokeObjectURL(url);
 }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/tokopi/assets/js/admin-charts.js?v=20261121b"></script>
+<script>
+<?php if (!empty($daily)): ?>
+new Chart(document.getElementById('chDaily'), {
+    data: {
+        labels: <?= json_encode(array_map(function ($d) { return date('d/m', strtotime($d['tanggal'])); }, $daily)) ?>,
+        datasets: [
+            { type: 'bar', label: 'Omzet', data: <?= json_encode(array_map(function ($d) { return (float)$d['omzet']; }, $daily)) ?>, backgroundColor: TK_COLORS[0], borderRadius: 4, maxBarThickness: 26, yAxisID: 'y', order: 2 },
+            { type: 'line', label: 'Laba kotor', data: <?= json_encode(array_map(function ($d) { return (float)$d['omzet'] - (float)$d['hpp']; }, $daily)) ?>, borderColor: TK_COLORS[1], backgroundColor: TK_COLORS[1], tension: 0, pointRadius: 3, yAxisID: 'y', order: 1 },
+            { type: 'line', label: 'Order', data: <?= json_encode(array_map(function ($d) { return (int)$d['total_order']; }, $daily)) ?>, borderColor: TK_COLORS[2], borderDash: [4, 4], pointRadius: 0, tension: 0, yAxisID: 'y2', order: 0 }
+        ]
+    },
+    options: {
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return ' ' + c.dataset.label + ': ' + (c.dataset.yAxisID === 'y2' ? c.raw + ' order' : tkRp(c.raw)); } } } },
+        scales: {
+            y: tkMoneyAxis,
+            y2: { position: 'right', beginAtZero: true, grid: { display: false }, ticks: { precision: 0 } },
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 12 } }
+        }
+    }
+});
+<?php endif; ?>
+<?php if (!empty($by_payment)): ?>
+new Chart(document.getElementById('chPay'), {
+    type: 'doughnut',
+    data: {
+        labels: <?= json_encode(array_map(function ($p) { return strtoupper($p['method']); }, $by_payment)) ?>,
+        datasets: [{ data: <?= json_encode(array_map(function ($p) { return (float)$p['total']; }, $by_payment)) ?>, backgroundColor: TK_COLORS, borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: {
+        cutout: '62%',
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { callbacks: { label: function (c) { var t = c.dataset.data.reduce(function (a, b) { return a + b; }, 0); return ' ' + c.label + ': ' + tkRp(c.raw) + ' (' + (t ? Math.round(c.raw / t * 100) : 0) + '%)'; } } }
+        }
+    }
+});
+<?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

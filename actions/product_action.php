@@ -1,4 +1,3 @@
-cat > actions/product_action.php << 'EOF'
 <?php
 // actions/product_action.php
 require_once __DIR__ . '/../config/bootstrap.php';
@@ -58,6 +57,18 @@ if ($action === 'add') {
         $stmt->execute([$tenant_id, $category_id, $nama, $description, $is_active]);
         $product_id = $pdo->lastInsertId();
 
+        // Foto produk (opsional)
+        try {
+            $img = product_image_store($_FILES['image'] ?? [], $product_id);
+            if ($img) {
+                $pdo->prepare("UPDATE products SET image_path = ? WHERE id = ? AND tenant_id = ?")
+                    ->execute([$img, $product_id, $tenant_id]);
+            }
+        } catch (RuntimeException $ex) {
+            flash_set('error', 'Produk tersimpan, tapi foto gagal: ' . $ex->getMessage());
+            redirect('/tokopi/views/product_detail.php?id=' . $product_id);
+        }
+
         flash_set('success', 'Produk "' . $nama . '" berhasil ditambahkan. Silakan tambahkan varian.');
         redirect('/tokopi/views/product_detail.php?id=' . $product_id);
     } catch (PDOException $e) {
@@ -84,16 +95,33 @@ elseif ($action === 'edit') {
     }
 
     // Cek milik tenant
-    $stmt = $pdo->prepare("SELECT id FROM products WHERE id = ? AND tenant_id = ?");
+    $stmt = $pdo->prepare("SELECT id, image_path FROM products WHERE id = ? AND tenant_id = ?");
     $stmt->execute([$id, $tenant_id]);
-    if (!$stmt->fetch()) {
+    $current = $stmt->fetch();
+    if (!$current) {
         flash_set('error', 'Produk tidak ditemukan.');
         redirect('/tokopi/views/products.php');
     }
 
+    // Foto: upload baru menggantikan yang lama; centang "hapus foto" mengosongkan
+    $image_path = $current['image_path'];
     try {
-        $stmt = $pdo->prepare("UPDATE products SET nama = ?, category_id = ?, description = ?, is_active = ? WHERE id = ? AND tenant_id = ?");
-        $stmt->execute([$nama, $category_id, $description, $is_active, $id, $tenant_id]);
+        $new_img = product_image_store($_FILES['image'] ?? [], $id);
+        if ($new_img) {
+            product_image_delete($image_path);
+            $image_path = $new_img;
+        } elseif (!empty($_POST['remove_image'])) {
+            product_image_delete($image_path);
+            $image_path = null;
+        }
+    } catch (RuntimeException $ex) {
+        flash_set('error', $ex->getMessage());
+        redirect('/tokopi/views/products.php');
+    }
+
+    try {
+        $stmt = $pdo->prepare("UPDATE products SET nama = ?, category_id = ?, description = ?, is_active = ?, image_path = ? WHERE id = ? AND tenant_id = ?");
+        $stmt->execute([$nama, $category_id, $description, $is_active, $image_path, $id, $tenant_id]);
         flash_set('success', 'Produk berhasil diupdate.');
     } catch (PDOException $e) {
         flash_set('error', 'Gagal update produk: ' . $e->getMessage());
@@ -111,7 +139,7 @@ elseif ($action === 'delete') {
     $id = (int)($_POST['id'] ?? 0);
 
     // Cek milik tenant
-    $stmt = $pdo->prepare("SELECT nama FROM products WHERE id = ? AND tenant_id = ?");
+    $stmt = $pdo->prepare("SELECT nama, image_path FROM products WHERE id = ? AND tenant_id = ?");
     $stmt->execute([$id, $tenant_id]);
     $existing = $stmt->fetch();
     if (!$existing) {
@@ -137,6 +165,7 @@ elseif ($action === 'delete') {
         // Hapus (varian & resep otomatis kehapus lewat CASCADE)
         $stmt = $pdo->prepare("DELETE FROM products WHERE id = ? AND tenant_id = ?");
         $stmt->execute([$id, $tenant_id]);
+        product_image_delete($existing['image_path']);
         flash_set('success', 'Produk "' . $existing['nama'] . '" berhasil dihapus.');
     } catch (PDOException $e) {
         flash_set('error', 'Gagal hapus produk: ' . $e->getMessage());

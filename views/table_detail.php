@@ -84,7 +84,7 @@ $qr_image = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=' . u
             ← Kembali
         </a>
         <button class="btn-print-qr" onclick="window.print()">
-            🖨️ Print QR
+            <i class="bi bi-printer" aria-hidden="true"></i> Print QR
         </button>
     </div>
 </div>

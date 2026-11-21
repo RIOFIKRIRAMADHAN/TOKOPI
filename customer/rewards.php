@@ -54,8 +54,8 @@ $error = flash_get('error');
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#412D15">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2D1B0A">
     <title>Rewards · Tokopi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -125,7 +125,7 @@ $error = flash_get('error');
             box-shadow: 0 8px 30px rgba(65,45,21,.2);
         }
         .points-card::after {
-            content: '🎁';
+            content: '';
             position: absolute;
             right: -20px;
             bottom: -30px;
@@ -467,6 +467,7 @@ $error = flash_get('error');
             color: #fff;
         }
     </style>
+    <link href="/tokopi/assets/css/customer.css?v=20261121d" rel="stylesheet">
 </head>
 <body>
 
@@ -495,7 +496,7 @@ $error = flash_get('error');
 
     <!-- GUEST MODE -->
     <div class="guest-card">
-        <div class="guest-icon">🎁</div>
+        <div class="guest-icon"><i class="bi bi-gift" aria-hidden="true"></i></div>
         <div class="guest-title">Reward Eksklusif</div>
         <div class="guest-desc">
             Login atau daftar akun untuk melihat reward yang bisa kamu tukar dengan poin.
@@ -568,7 +569,7 @@ $error = flash_get('error');
         <?php else: ?>
             <?php foreach ($rewards as $r):
                 $can_redeem = $points >= (int)$r['points_cost'];
-                $icon = $r['type'] === 'FREE_ITEM' ? '☕' : ($r['type'] === 'DISCOUNT_NOMINAL' ? '💰' : '🏷️');
+                $icon = '<i class="bi ' . ($r['type'] === 'FREE_ITEM' ? 'bi-cup-hot' : ($r['type'] === 'DISCOUNT_NOMINAL' ? 'bi-cash-coin' : 'bi-percent')) . '" aria-hidden="true"></i>';
             ?>
                 <div class="reward-card <?= !$can_redeem ? 'locked' : '' ?>">
                     <div class="reward-icon"><?= $icon ?></div>
@@ -605,7 +606,7 @@ $error = flash_get('error');
 <!-- MODAL REDEEM -->
 <div class="modal-custom" id="modalRedeem">
     <div class="modal-content-c">
-        <div class="modal-icon">🎁</div>
+        <div class="modal-icon"><i class="bi bi-gift" aria-hidden="true"></i></div>
         <div class="modal-title">Tukar Poin?</div>
         <div class="modal-desc">
             Tukar <strong id="redeem-cost"></strong> poin dengan <strong id="redeem-name"></strong>?
@@ -676,7 +677,7 @@ async function confirmRedeem() {
         }
 
         // Sukses
-        alert('✅ Voucher berhasil ditukar!\n\nKode: ' + data.voucher_code + '\n\nLihat di "Voucher Saya"');
+        alert('Voucher berhasil ditukar!\n\nKode: ' + data.voucher_code + '\n\nLihat di "Voucher Saya"');
         window.location.href = '/tokopi/customer/my_vouchers.php';
 
     } catch (e) {

@@ -89,8 +89,9 @@ require_once __DIR__ . '/../includes/header.php';
         <span>Daftar Resep per Varian</span>
         <small class="text-muted">Klik "Kelola Resep" untuk mengatur bahan</small>
     </div>
+    <div class="d-flex justify-content-end p-2 border-bottom"><div class="table-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="form-control form-control-sm" placeholder="Cari resep…" aria-label="Cari resep" data-table-filter="#tbl_recipes"></div></div>
     <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table table-hover align-middle mb-0" id="tbl_recipes" data-enhance data-page-size="25">
             <thead>
                 <tr>
                     <th width="60">#</th>
@@ -100,7 +101,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th width="160" class="text-end">HPP</th>
                     <th width="140" class="text-end">Margin</th>
                     <th width="130" class="text-center">Status</th>
-                    <th width="140" class="text-end">Aksi</th>
+                    <th data-nosort width="140" class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>

@@ -1,343 +1,235 @@
 <?php
-// company/index.php — Homepage Company Profile Tokopi
+// company/index.php — Beranda
 require_once __DIR__ . '/../config/bootstrap.php';
 
-// ---------- Ambil Tenant ID ----------
-$tenant_id = 0;
-try {
-    $stmt = $pdo->query("SELECT id FROM tenants ORDER BY id LIMIT 1");
-    $tenant_id = (int)$stmt->fetchColumn();
-} catch (Throwable $e) {
-    error_log('[company/index] tenant: ' . $e->getMessage());
+$page_title = 'Tokopi';
+$page_desc  = 'Kedai kopi lokal di Jakarta. Lihat menu & harga, temukan cabang terdekat, dan pesan langsung dari meja lewat QR.';
+$active_nav = 'home';
+require_once __DIR__ . '/../includes/header_public.php';
+
+$tenant_id = $PUBLIC_TENANT_ID;
+
+// Menu unggulan: produk terlaris 30 hari (fallback: terbaru)
+$featured = [];
+$stats = ['products' => 0, 'members' => 0, 'min_price' => 0];
+if ($tenant_id > 0) {
+    try {
+        $st = $pdo->prepare("
+            SELECT p.id, p.nama, p.description, p.image_path, c.nama AS kategori,
+                   MIN(pv.harga_jual) AS harga_min,
+                   COALESCE((SELECT SUM(oi.qty) FROM order_items oi
+                             JOIN product_variants v2 ON v2.id = oi.variant_id
+                             JOIN orders o ON o.id = oi.order_id
+                             WHERE v2.product_id = p.id AND o.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+                               AND o.status IN ('PAID','PREPARING','READY','COMPLETED')), 0) AS sold
+            FROM products p
+            JOIN categories c ON c.id = p.category_id
+            JOIN product_variants pv ON pv.product_id = p.id AND pv.is_active = 1
+            WHERE p.tenant_id = ? AND p.is_active = 1 AND c.slug <> 'promo-combo'
+            GROUP BY p.id, p.nama, p.description, p.image_path, c.nama
+            ORDER BY sold DESC, p.id DESC
+            LIMIT 6
+        ");
+        $st->execute([$tenant_id]);
+        $featured = $st->fetchAll(PDO::FETCH_ASSOC);
+
+        $st = $pdo->prepare("SELECT COUNT(*) FROM products WHERE tenant_id = ? AND is_active = 1");
+        $st->execute([$tenant_id]);
+        $stats['products'] = (int)$st->fetchColumn();
+
+        $st = $pdo->prepare("SELECT COUNT(*) FROM customers WHERE tenant_id = ?");
+        $st->execute([$tenant_id]);
+        $stats['members'] = (int)$st->fetchColumn();
+
+        $st = $pdo->prepare("SELECT MIN(pv.harga_jual) FROM product_variants pv JOIN products p ON p.id = pv.product_id WHERE p.tenant_id = ? AND p.is_active = 1 AND pv.is_active = 1");
+        $st->execute([$tenant_id]);
+        $stats['min_price'] = (float)$st->fetchColumn();
+    } catch (Throwable $e) {
+        error_log('[company/index] ' . $e->getMessage());
+    }
 }
 
-// ---------- Testimonials ----------
+// Testimoni (teks saja — tanpa foto wajah)
 $testimonials = [];
 try {
-    $stmt = $pdo->prepare("
-        SELECT nama, teks, rating FROM testimonials
-        WHERE is_visible = 1 ORDER BY created_at DESC LIMIT 6
-    ");
-    $stmt->execute();
-    $testimonials = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $testimonials = $pdo->query("SELECT nama, teks, rating, created_at FROM testimonials WHERE is_visible = 1 ORDER BY created_at DESC LIMIT 3")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
     error_log('[company/index] testimonials: ' . $e->getMessage());
 }
 
-// ---------- Featured Products ----------
-$featured = [];
-if ($tenant_id > 0) {
-    try {
-        $stmt = $pdo->prepare("
-            SELECT p.id, p.nama, MIN(pv.harga_jual) AS harga_min
-            FROM products p
-            JOIN product_variants pv ON pv.product_id = p.id
-            WHERE p.tenant_id = ? AND p.is_active = 1 AND pv.is_active = 1
-            GROUP BY p.id, p.nama
-            ORDER BY p.id DESC LIMIT 4
-        ");
-        $stmt->execute([$tenant_id]);
-        $featured = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    } catch (Throwable $e) {
-        error_log('[company/index] featured: ' . $e->getMessage());
-    }
-}
-
-// Fallback dummy jika produk kosong
-if (empty($featured)) {
-    $featured = [
-        ['nama'=>'Espresso','harga_min'=>18000],
-        ['nama'=>'Cappuccino','harga_min'=>25000],
-        ['nama'=>'Caramel Macchiato','harga_min'=>32000],
-        ['nama'=>'Cold Brew','harga_min'=>28000],
-    ];
-}
-
-$page_title = 'Tokopi — Kopi Pilihan, Suasana Hangat';
-$active_nav = 'home';
-require_once __DIR__ . '/../includes/header_public.php';
+$board = array_slice($featured, 0, 5);
+function rp_short($n) { return number_format((float)$n / 1000, 0, ',', '.') . 'k'; }
 ?>
 
-<!-- ============ CSS MANDIRI HOMEPAGE (ANTI RUSAK) ============ -->
-<style>
-    body { padding-top: 76px; }
-    
-    /* HERO SECTION */
-    .hero { 
-        background: linear-gradient(135deg, #2D1B0A 0%, #1A0F06 100%) !important; 
-        color: #fff !important; 
-        padding: 100px 0 80px; 
-        position: relative; 
-        overflow: hidden; 
-    }
-    .hero::before { 
-        content: ''; position: absolute; inset: 0; 
-        background: radial-gradient(circle at 80% 30%, rgba(225,220,201,.1) 0%, transparent 55%); 
-        pointer-events: none; 
-    }
-    .hero .container { position: relative; z-index: 1; }
-    
-    .hero-eyebrow { color: #B8853A !important; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; font-size: 0.8rem; }
-    .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 700; line-height: 1.1; color: #fff !important; margin-top: 12px; margin-bottom: 24px; }
-    .hero h1 span { color: #E1DCC9 !important; }
-    .hero p { color: #fff !important; opacity: .9; max-width: 32rem; font-size: 1.1rem; line-height: 1.6; margin-bottom: 32px; }
-    
-    .hero-visual { 
-        aspect-ratio: 1; border-radius: 32px; 
-        background: linear-gradient(135deg, rgba(225,220,201,.12), rgba(225,220,201,.02)); 
-        border: 1px solid rgba(225,220,201,.15); 
-        display: flex; align-items: center; justify-content: center; 
-        font-size: 10rem; color: rgba(225,220,201,.55); 
-    }
-    
-    .btn-hero-primary { 
-        background: #E1DCC9; color: #2D1B0A; border: none; font-weight: 700; 
-        padding: 16px 32px; border-radius: 12px; text-decoration: none; 
-        display: inline-flex; align-items: center; transition: all 0.2s; font-size: 1rem;
-    }
-    .btn-hero-primary:hover { background: #fff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); color: #2D1B0A; }
-    
-    .btn-hero-outline { 
-        background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.4); 
-        font-weight: 700; padding: 16px 32px; border-radius: 12px; text-decoration: none; 
-        display: inline-flex; align-items: center; transition: all 0.2s; font-size: 1rem;
-    }
-    .btn-hero-outline:hover { background: rgba(255,255,255,0.1); border-color: #fff; color: #fff; }
-
-    /* MENU CARD */
-    .menu-card { 
-        background: #fff !important; 
-        border: 1px solid #EBE6DA !important; 
-        border-radius: 20px !important; 
-        overflow: hidden; 
-        display: flex; flex-direction: column; height: 100%;
-        transition: all .3s ease;
-    }
-    .menu-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(65,45,21,.12); }
-    .menu-card-img { 
-        height: 160px; 
-        background: linear-gradient(135deg, #F3F0E6 0%, #E1DCC9 100%) !important; 
-        display: flex; align-items: center; justify-content: center; 
-        font-size: 3rem; color: #D4C4B0; 
-    }
-    
-    /* TESTIMONIAL CARD */
-    .testimonial-card { 
-        background: #fff !important; 
-        border: 1px solid #EBE6DA !important; 
-        border-radius: 20px !important; 
-        padding: 24px !important; 
-        height: 100%; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-    }
-    .avatar-circle { 
-        width: 50px; height: 50px; border-radius: 50%; 
-        background: #E1DCC9 !important; color: #2D1B0A !important; 
-        display: flex; align-items: center; justify-content: center; 
-        font-weight: 800; font-size: 1.2rem; flex-shrink: 0; 
-        font-family: 'Playfair Display', serif;
-    }
-
-    /* CTA BAND */
-    .cta-band { 
-        background: linear-gradient(135deg, #2D1B0A 0%, #1A0F06 100%) !important; 
-        border-radius: 32px !important; 
-        padding: 48px !important; 
-        color: #fff !important; 
-    }
-</style>
-
-<!-- ============ HERO ============ -->
-<section class="hero">
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-7">
-        <span class="hero-eyebrow">Specialty Coffee · Est. 2024</span>
-        <h1>Setiap Cangkir,<br><span>Sebuah Cerita.</span></h1>
-        <p>
-          Kopi pilihan dari biji terbaik, diracik dengan tangan-tangan yang peduli. Suasana hangat, koneksi nyata, dalam setiap tegukan.
-        </p>
-        <div class="d-flex flex-wrap gap-3">
-          <a href="<?= $COMPANY_BASE ?>/menu.php" class="btn-hero-primary">
-            <i class="bi bi-cup-hot me-2"></i> Lihat Menu
-          </a>
-          <a href="<?= $COMPANY_BASE ?>/about.php" class="btn-hero-outline">Cerita Kami</a>
-        </div>
-      </div>
-      <div class="col-lg-5 d-none d-lg-block">
-        <div class="hero-visual" style="overflow: hidden;">
-          <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1200&auto=format&fit=crop"
-               alt="Tokopi Coffee Shop Interior"
-               loading="lazy"
-               style="width: 100%; height: 100%; object-fit: cover; border-radius: 2rem;"
-               onerror="this.onerror=null; this.src='https://placehold.co/800x800?text=Tokopi';">
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ ABOUT PREVIEW ============ -->
-<section style="padding:5rem 0;">
-  <div class="container">
-    <div class="row align-items-center g-5">
-      <div class="col-lg-5 fade-in-up">
-        <div class="about-visual" style="aspect-ratio:4/5; border-radius:2rem; overflow: hidden;">
-          <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=1200&auto=format&fit=crop"
-               alt="Tokopi Cafe Atmosphere"
-               loading="lazy"
-               style="width: 100%; height: 100%; object-fit: cover;"
-               onerror="this.onerror=null; this.src='https://placehold.co/800x1000?text=Tokopi';">
-        </div>
-      </div>
-      <div class="col-lg-7 fade-in-up">
-        <span class="eyebrow" style="color: #B8853A !important; font-weight:700;">TENTANG KAMI</span>
-        <h2 class="section-title display-6 mt-2 mb-3" style="color: #2D1B0A !important; font-family:'Playfair Display', serif; font-weight:700;">Lebih dari sekadar kedai kopi.</h2>
-        <p class="text-muted lh-lg mb-3">
-          Tokopi lahir dari kecintaan sederhana pada kopi dan obrolan panjang. Kami percaya setiap cangkir bisa menjadi alasan untuk berhenti, bernapas, dan tersenyum.
-        </p>
-        <p class="text-muted lh-lg mb-4">
-          Biji pilihan dari petani lokal, di-roast dengan presisi, dan diseduh dengan sepenuh hati — itulah janji kami di setiap cabang.
-        </p>
-        <a href="<?= $COMPANY_BASE ?>/about.php" class="btn btn-espresso">Pelajari Lebih Lanjut <i class="bi bi-arrow-right ms-2"></i></a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ FEATURED MENU ============ -->
-<section style="background:#F3F0E6; padding:5rem 0;">
-  <div class="container">
-    <div class="text-center mb-5 fade-in-up">
-      <span class="eyebrow" style="color: #B8853A !important; font-weight:700;">MENU FAVORIT</span>
-      <h2 class="section-title display-6 mt-2" style="color: #2D1B0A !important; font-family:'Playfair Display', serif; font-weight:700;">Yang Paling Dicintai</h2>
-    </div>
-    <div class="row g-4">
-      <?php
-    // Mapping gambar berdasarkan urutan produk (fallback dummy)
-    $menu_images = [
-        0 => 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=600&auto=format&fit=crop', // Espresso
-        1 => 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?q=80&w=600&auto=format&fit=crop', // Cappuccino
-        2 => 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=600&auto=format&fit=crop', // Caramel Macchiato
-        3 => 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?q=80&w=600&auto=format&fit=crop', // Cold Brew
-    ];
-    foreach ($featured as $i => $p):
-        $img_url = $menu_images[$i] ?? 'https://placehold.co/600x400?text=Tokopi';
-    ?>
-      <div class="col-md-6 col-lg-3 fade-in-up" style="transition-delay:<?= $i * 100 ?>ms;">
-        <div class="menu-card">
-          <div class="menu-card-img">
-            <img src="<?= $img_url ?>"
-                 alt="<?= e($p['nama']) ?>"
-                 loading="lazy"
-                 style="width: 100%; height: 160px; object-fit: cover;"
-                 onerror="this.onerror=null; this.src='https://placehold.co/600x400?text=Tokopi';">
-          </div>
-          <div class="p-4 d-flex flex-column flex-grow-1">
-            <h5 class="fw-bold mb-1" style="color:#2D1B0A !important;"><?= e($p['nama']) ?></h5>
-            <p class="text-muted small mb-3">Mulai dari</p>
-            <div class="mt-auto d-flex justify-content-between align-items-center">
-              <span class="font-mono fw-bold" style="color:#2D1B0A;">Rp <?= number_format((int)($p['harga_min'] ?? 0), 0, ',', '.') ?></span>
-              <a href="<?= $COMPANY_BASE ?>/menu.php" class="btn btn-sm btn-outline-dark rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px; border-color:#EBE6DA;"><i class="bi bi-arrow-right"></i></a>
+<!-- HERO -->
+<section class="hero-p">
+    <div class="wrap hero-grid">
+        <div>
+            <div class="hero-meta">
+                <span class="open-dot <?= $IS_OPEN_NOW ? '' : 'closed' ?>"><?= $IS_OPEN_NOW ? 'Buka sekarang' : 'Sedang tutup' ?> · <?= e($PUBLIC_HOURS['label']) ?></span>
+                <span><i class="bi bi-geo-alt" aria-hidden="true"></i> <?= count($PUBLIC_OUTLETS) ?: 'Beberapa' ?> cabang di Jakarta</span>
             </div>
-          </div>
+            <h1 class="display">Kopi lokal,<br>pesan <em class="accent">dari meja.</em></h1>
+            <p class="lead">Duduk dulu, scan QR di meja, pilih menu, bayar pakai QRIS atau di kasir. Pesananmu langsung masuk ke barista, tanpa antre di depan.</p>
+            <div class="hero-actions">
+                <a href="<?= $COMPANY_BASE ?>/menu.php" class="btn-p">Lihat menu &amp; harga <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                <a href="#cara-pesan" class="btn-p ghost">Cara pesan via QR</a>
+            </div>
         </div>
-      </div>
-      <?php endforeach; ?>
+
+        <?php if ($board): ?>
+        <aside class="board" aria-labelledby="boardTitle">
+            <div class="board-head">
+                <h2 id="boardTitle">Favorit bulan ini</h2>
+                <span><?= date('d.m.Y') ?></span>
+            </div>
+            <ul>
+                <?php foreach ($board as $p): ?>
+                    <li>
+                        <span class="name"><?= e($p['nama']) ?></span>
+                        <span class="dots" aria-hidden="true"></span>
+                        <span class="price"><span class="visually-hidden">mulai </span><?= rp_short($p['harga_min']) ?></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+            <div class="board-foot">
+                <span>Harga dalam ribu rupiah</span>
+                <a href="<?= $COMPANY_BASE ?>/menu.php">Menu lengkap →</a>
+            </div>
+        </aside>
+        <?php endif; ?>
     </div>
-    <div class="text-center mt-5">
-      <a href="<?= $COMPANY_BASE ?>/menu.php" class="btn btn-espresso btn-lg px-4" style="background:#2D1B0A; color:#fff;">Lihat Menu Lengkap <i class="bi bi-arrow-right ms-2"></i></a>
-    </div>
-  </div>
 </section>
 
-<!-- ============ TESTIMONI ============ -->
-<section style="padding:5rem 0; background: #fff;">
-  <div class="container">
-    <div class="text-center mb-5 fade-in-up">
-      <span class="eyebrow" style="color: #B8853A !important; font-weight:700;">TESTIMONI</span>
-      <h2 class="section-title display-6 mt-2" style="color: #2D1B0A !important; font-family:'Playfair Display', serif; font-weight:700;">Kata Mereka</h2>
-      <p class="text-muted mt-2">Cerita nyata dari pelanggan setia Tokopi.</p>
+<!-- FAKTA -->
+<section aria-label="Tokopi dalam angka">
+    <div class="wrap facts">
+        <div class="fact"><strong><?= count($PUBLIC_OUTLETS) ?></strong><span>cabang di Jakarta</span></div>
+        <div class="fact"><strong><?= $stats['products'] ?></strong><span>menu kopi, non-kopi &amp; makanan</span></div>
+        <div class="fact"><strong class="mono" style="font-family:var(--p-display)">Rp<?= rp_short($stats['min_price']) ?></strong><span>harga mulai dari</span></div>
+        <div class="fact"><strong>1 poin</strong><span>setiap belanja Rp10.000</span></div>
     </div>
+</section>
 
-    <?php $chunks = array_chunk($testimonials, 3); $slide_count = count($chunks); ?>
-
-    <div id="testiCarousel" class="carousel slide fade-in-up" data-bs-ride="carousel" data-bs-interval="6000">
-      <div class="carousel-inner">
-        <?php foreach ($chunks as $ci => $chunk): ?>
-        <div class="carousel-item <?= $ci === 0 ? 'active' : '' ?>">
-          <div class="row g-4 px-md-4">
-            <?php
-            $avatar_pool = [
-                'https://randomuser.me/api/portraits/women/44.jpg',
-                'https://randomuser.me/api/portraits/men/32.jpg',
-                'https://randomuser.me/api/portraits/women/68.jpg',
-                'https://randomuser.me/api/portraits/men/75.jpg',
-                'https://randomuser.me/api/portraits/women/12.jpg',
-            ];
-            $avatar_idx = 0;
-            foreach ($chunk as $t):
-                $avatar_url = $avatar_pool[$avatar_idx % count($avatar_pool)];
-                $avatar_idx++;
-            ?>
-            <div class="col-md-4">
-              <div class="testimonial-card">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                  <div class="avatar-circle" style="overflow: hidden; background: none;">
-                    <img src="<?= $avatar_url ?>"
-                         alt="<?= e($t['nama']) ?>"
-                         loading="lazy"
-                         style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;"
-                         onerror="this.onerror=null; this.src='https://placehold.co/50x50?text=' + encodeURIComponent('<?= e($t['nama']) ?>'.charAt(0)); this.style.background='#E1DCC9'; this.style.color='#2D1B0A';">
-                  </div>
-                  <div>
-                    <h6 class="mb-1 fw-bold" style="color:#2D1B0A !important;"><?= e($t['nama']) ?></h6>
-                    <div class="text-warning small" style="color: #B8853A !important;">
-                      <?php for ($s = 1; $s <= 5; $s++): ?>
-                        <i class="bi bi-star<?= $s <= (int)$t['rating'] ? '-fill' : '' ?>"></i>
-                      <?php endfor; ?>
+<!-- MENU UNGGULAN -->
+<?php if ($featured): ?>
+<section class="section">
+    <div class="wrap split">
+        <div class="sticky-col">
+            <div class="kicker"><b>01</b> Menu</div>
+            <h2 class="h-xl">Yang paling sering dipesan.</h2>
+            <p class="lead" style="margin-top:18px;">Diurutkan dari pesanan 30 hari terakhir di semua cabang.</p>
+            <p style="margin-top:28px;"><a class="link-arrow" href="<?= $COMPANY_BASE ?>/menu.php">Semua menu <i class="bi bi-arrow-right" aria-hidden="true"></i></a></p>
+        </div>
+        <div>
+            <?php foreach ($featured as $p): ?>
+                <div class="menu-row">
+                    <?= product_img($p['image_path'], $p['nama']) ?>
+                    <div>
+                        <h3 style="font-family:var(--p-sans);font-size:17px;font-weight:700;letter-spacing:0;line-height:1.3;"><?= e($p['nama']) ?></h3>
+                        <p><?= e($p['description'] ?: $p['kategori']) ?></p>
                     </div>
-                  </div>
+                    <div class="price">Rp<?= number_format((float)$p['harga_min'], 0, ',', '.') ?><small>mulai dari</small></div>
                 </div>
-                <p class="mb-0 text-muted lh-lg" style="font-style:italic;">&ldquo;<?= e($t['teks']) ?>&rdquo;</p>
-              </div>
-            </div>
             <?php endforeach; ?>
-            <?php if (count($chunk) < 3): for ($pad = 0; $pad < 3 - count($chunk); $pad++): ?>
-              <div class="col-md-4 d-none d-md-block"></div>
-            <?php endfor; endif; ?>
-          </div>
         </div>
-        <?php endforeach; ?>
-      </div>
-      <?php if ($slide_count > 1): ?>
-      <div class="carousel-indicators" style="position:static; margin-top:2rem;">
-        <?php for ($i = 0; $i < $slide_count; $i++): ?>
-        <button type="button" data-bs-target="#testiCarousel" data-bs-slide-to="<?= $i ?>" class="<?= $i === 0 ? 'active' : '' ?>" style="background: #B8853A !important; border-radius: 50%; width:10px; height:10px; border:none; margin:0 4px;"></button>
-        <?php endfor; ?>
-      </div>
-      <?php endif; ?>
     </div>
-  </div>
+</section>
+<?php endif; ?>
+
+<!-- CARA PESAN (satu-satunya section gelap) -->
+<section class="section night" id="cara-pesan">
+    <div class="wrap">
+        <div class="kicker"><b>02</b> Pesan dari meja</div>
+        <h2 class="h-xl" style="max-width:16ch;">Tidak perlu antre di kasir.</h2>
+        <p class="lead" style="margin-top:18px;">Setiap meja punya QR sendiri. Pesananmu tercatat dengan nomor meja, jadi barista tahu harus mengantar ke mana.</p>
+        <div class="steps-p">
+            <div class="step-p">
+                <i class="bi bi-qr-code-scan" aria-hidden="true"></i>
+                <h3>Scan QR di meja</h3>
+                <p>Buka kamera HP, arahkan ke QR. Menu langsung terbuka, tanpa install aplikasi.</p>
+            </div>
+            <div class="step-p">
+                <i class="bi bi-cup-hot" aria-hidden="true"></i>
+                <h3>Pilih &amp; atur pesanan</h3>
+                <p>Pilih ukuran, tambah catatan seperti <i>less ice</i> atau tanpa gula, lalu masukkan ke keranjang.</p>
+            </div>
+            <div class="step-p">
+                <i class="bi bi-qr-code" aria-hidden="true"></i>
+                <h3>Bayar, lalu tunggu</h3>
+                <p>Bayar QRIS dari e-wallet atau m-banking, atau bayar tunai di kasir. Status pesanan bisa dipantau di HP.</p>
+            </div>
+        </div>
+        <div class="hero-actions" style="margin-top:48px;">
+            <a href="<?= $APP_BASE ?>/customer/home.php" class="btn-p on-dark">Coba pesan sekarang <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+            <a href="<?= $COMPANY_BASE ?>/faq.php" class="btn-p on-dark ghost">Pertanyaan umum</a>
+        </div>
+    </div>
 </section>
 
-<!-- ============ CTA ============ -->
-<section style="padding:5rem 0;">
-  <div class="container">
-    <div class="cta-band fade-in-up">
-      <div class="row align-items-center g-4">
-        <div class="col-lg-8">
-          <h2 class="section-title display-6 mb-2" style="color:#fff !important; font-family:'Playfair Display', serif; font-weight:700;">Ngopi bareng kami hari ini.</h2>
-          <p class="mb-0" style="color:#E1DCC9 !important; opacity:.9;">Kunjungi cabang terdekat, atau pesan langsung dari meja lewat QR — tanpa antre, tanpa ribet.</p>
+<!-- CABANG -->
+<?php if ($PUBLIC_OUTLETS): ?>
+<section class="section">
+    <div class="wrap">
+        <div class="kicker"><b>03</b> Cabang</div>
+        <h2 class="h-xl" style="margin-bottom:40px;">Mampir ke yang terdekat.</h2>
+        <div class="branches">
+            <?php foreach ($PUBLIC_OUTLETS as $o): ?>
+                <article class="branch">
+                    <span class="code"><?= e($o['code']) ?></span>
+                    <h3><?= e(outlet_short($o['nama'])) ?></h3>
+                    <p><?= e($o['alamat'] ?: 'Jakarta') ?></p>
+                    <ul>
+                        <li><i class="bi bi-clock" aria-hidden="true"></i> <?= e($PUBLIC_HOURS['label']) ?></li>
+                        <?php if (!empty($o['no_hp'])): ?><li><i class="bi bi-telephone" aria-hidden="true"></i> <?= e($o['no_hp']) ?></li><?php endif; ?>
+                    </ul>
+                    <a class="link-arrow" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=<?= urlencode(outlet_map_query($o)) ?>">Buka di Maps <i class="bi bi-arrow-up-right" aria-hidden="true"></i></a>
+                </article>
+            <?php endforeach; ?>
         </div>
-        <div class="col-lg-4 text-lg-end">
-          <a href="<?= $COMPANY_BASE ?>/contact.php" class="btn-hero-primary">
-            <i class="bi bi-geo-alt me-2"></i> Temukan Kami
-          </a>
-        </div>
-      </div>
     </div>
-  </div>
+</section>
+<?php endif; ?>
+
+<!-- KATA PELANGGAN -->
+<?php if ($testimonials): ?>
+<section class="section" style="background:var(--p-paper-2);">
+    <div class="wrap">
+        <div class="kicker"><b>04</b> Kata pelanggan</div>
+        <h2 class="h-xl" style="margin-bottom:48px;">Ditulis oleh yang sudah mampir.</h2>
+        <div class="quotes">
+            <?php foreach ($testimonials as $t): ?>
+                <figure class="quote reveal">
+                    <blockquote><?= e($t['teks']) ?></blockquote>
+                    <figcaption>
+                        <b><?= e($t['nama']) ?></b>
+                        <span class="stars" aria-label="Rating <?= (int)$t['rating'] ?> dari 5"><?= str_repeat('★', (int)$t['rating']) ?></span>
+                    </figcaption>
+                </figure>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</section>
+<?php endif; ?>
+
+<!-- MEMBER -->
+<section class="section">
+    <div class="wrap split even" style="align-items:center;">
+        <div>
+            <div class="kicker"><b>05</b> Member</div>
+            <h2 class="h-xl">Ngopi rutin, <em class="accent">dapat poin.</em></h2>
+            <p class="lead" style="margin-top:18px;">Daftar gratis pakai nomor HP. Setiap Rp10.000 jadi 1 poin, yang bisa ditukar voucher diskon atau minuman gratis.</p>
+            <div class="hero-actions" style="margin-top:28px;">
+                <a href="<?= $APP_BASE ?>/customer/register.php" class="btn-p">Daftar member</a>
+                <a href="<?= $APP_BASE ?>/customer/login.php" class="btn-p ghost">Sudah punya akun</a>
+            </div>
+        </div>
+        <div class="tiers" role="list">
+            <div class="tier" role="listitem" style="--c:#A9713F;"><span class="badge-t">Bronze</span><h3>Mulai</h3><p>Langsung dapat poin dari pesanan pertama.</p></div>
+            <div class="tier" role="listitem" style="--c:#9AA0A6;"><span class="badge-t">Silver</span><h3>Rutin</h3><p>Pilihan reward lebih banyak.</p></div>
+            <div class="tier" role="listitem" style="--c:#C9A227;"><span class="badge-t">Gold</span><h3>Langganan</h3><p>Benefit tertinggi untuk pelanggan setia.</p></div>
+        </div>
+    </div>
 </section>
 
 <?php require_once __DIR__ . '/../includes/footer_public.php'; ?>

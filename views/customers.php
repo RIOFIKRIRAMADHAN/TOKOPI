@@ -81,7 +81,7 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card p-3">
             <div class="text-muted small text-uppercase">Tier Breakdown</div>
             <div style="font-size:0.85rem; margin-top:4px;">
-                🥉 <?= (int)$stats['bronze'] ?> · 🥈 <?= (int)$stats['silver'] ?> · 🥇 <?= (int)$stats['gold'] ?>
+                Bronze <?= (int)$stats['bronze'] ?> · Silver <?= (int)$stats['silver'] ?> · Gold <?= (int)$stats['gold'] ?>
             </div>
         </div>
     </div>
@@ -111,9 +111,9 @@ require_once __DIR__ . '/../includes/header.php';
                 <label class="form-label small">Tier</label>
                 <select name="tier" class="form-select form-select-sm">
                     <option value="">Semua Tier</option>
-                    <option value="BRONZE" <?= $filter_tier === 'BRONZE' ? 'selected' : '' ?>>🥉 Bronze</option>
-                    <option value="SILVER" <?= $filter_tier === 'SILVER' ? 'selected' : '' ?>>🥈 Silver</option>
-                    <option value="GOLD" <?= $filter_tier === 'GOLD' ? 'selected' : '' ?>>🥇 Gold</option>
+                    <option value="BRONZE" <?= $filter_tier === 'BRONZE' ? 'selected' : '' ?>>Bronze</option>
+                    <option value="SILVER" <?= $filter_tier === 'SILVER' ? 'selected' : '' ?>>Silver</option>
+                    <option value="GOLD" <?= $filter_tier === 'GOLD' ? 'selected' : '' ?>>Gold</option>
                 </select>
             </div>
             <div class="col-md-3 d-flex gap-2">
@@ -127,7 +127,7 @@ require_once __DIR__ . '/../includes/header.php';
 <!-- Table -->
 <div class="card">
     <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table table-hover align-middle mb-0" id="tbl_customers" data-enhance data-page-size="25">
             <thead>
                 <tr>
                     <th width="60">#</th>
@@ -137,7 +137,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th class="text-end">Poin</th>
                     <th class="text-end">Total Belanja</th>
                     <th class="text-center">Order</th>
-                    <th width="100" class="text-end">Aksi</th>
+                    <th data-nosort width="100" class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -146,7 +146,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php else: ?>
                     <?php foreach ($customers as $i => $c): ?>
                         <?php
-                        $tier_icon = $c['tier'] === 'GOLD' ? '🥇' : ($c['tier'] === 'SILVER' ? '🥈' : '🥉');
+                        $tier_icon = '<i class="bi bi-award-fill" style="color:' . ($c['tier'] === 'GOLD' ? '#C9A227' : ($c['tier'] === 'SILVER' ? '#9AA0A6' : '#A9713F')) . '" aria-hidden="true"></i>';
                         $tier_class = $c['tier'] === 'GOLD' ? 'bg-warning text-dark' : ($c['tier'] === 'SILVER' ? 'bg-secondary' : 'bg-light text-dark');
                         ?>
                         <tr>

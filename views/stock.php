@@ -135,8 +135,9 @@ require_once __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <div class="card">
+    <div class="d-flex justify-content-end p-2 border-bottom"><div class="table-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="form-control form-control-sm" placeholder="Cari bahan / outlet…" aria-label="Cari bahan / outlet" data-table-filter="#tbl_stock"></div></div>
     <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table table-hover align-middle mb-0" id="tbl_stock" data-enhance data-page-size="25">
             <thead>
                 <tr>
                     <th width="60">#</th>
@@ -147,7 +148,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th width="140" class="text-end">Stok</th>
                     <th width="140" class="text-end">Reorder Point</th>
                     <th width="120" class="text-center">Status</th>
-                    <th width="100" class="text-end">Aksi</th>
+                    <th data-nosort width="100" class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -243,9 +244,9 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="mb-3">
                     <label class="form-label">Jenis Penyesuaian <span class="text-danger">*</span></label>
                     <select name="mode" id="adj_mode" class="form-select" required onchange="updatePreview()">
-                        <option value="add">➕ Tambah (Stock In)</option>
-                        <option value="subtract">➖Kurangi (Waste / Loss)</option>
-                        <option value="set">🔧 Set ke Angka Baru</option>
+                        <option value="add">Tambah (Stock In)</option>
+                        <option value="subtract">Kurangi (Waste / Loss)</option>
+                        <option value="set">Set ke angka baru</option>
                     </select>
                 </div>
 
@@ -291,9 +292,9 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="mb-3">
                     <label class="form-label">Jenis Penyesuaian <span class="text-danger">*</span></label>
                     <select name="mode" class="form-select" required>
-                        <option value="add">➕ Tambah (Stock In)</option>
-                        <option value="subtract">➖ Kurangi (Waste / Loss)</option>
-                        <option value="set">🔧 Set ke Angka Baru</option>
+                        <option value="add">Tambah (Stock In)</option>
+                        <option value="subtract">Kurangi (Waste / Loss)</option>
+                        <option value="set">Set ke angka baru</option>
                     </select>
                 </div>
 

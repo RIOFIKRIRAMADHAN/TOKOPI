@@ -2,84 +2,24 @@
 // company/terms.php — Syarat & Ketentuan
 require_once __DIR__ . '/../config/bootstrap.php';
 
-$page_title = 'Syarat & Ketentuan — Tokopi';
+$page_title = 'Syarat & ketentuan';
+$page_desc  = 'Ketentuan penggunaan layanan Tokopi, termasuk pemesanan via QR, pembayaran, refund, dan program poin.';
 $active_nav = 'terms';
 require_once __DIR__ . '/../includes/header_public.php';
 ?>
 
-<style>
-    .page-hero {
-        background: linear-gradient(135deg, var(--espresso) 0%, var(--espresso-dark) 100%);
-        color: #fff;
-        padding: 5rem 0 4rem;
-        position: relative; overflow: hidden;
-    }
-    .page-hero::before {
-        content: ''; position: absolute; inset: 0;
-        background: radial-gradient(circle at 80% 20%, rgba(225,220,201,.08) 0%, transparent 55%);
-        pointer-events: none;
-    }
-    .page-hero > .container { position: relative; z-index: 1; }
-    .page-title {
-        font-family: 'Playfair Display', serif;
-        font-size: clamp(2rem, 4vw, 3.25rem);
-        font-weight: 700; line-height: 1.15; letter-spacing: -0.02em;
-    }
-
-    .legal-content { max-width: 820px; margin: 0 auto; }
-    .legal-content h2 {
-        font-family: 'Playfair Display', serif;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--espresso);
-        margin-top: 2.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: .5rem;
-        border-bottom: 2px solid var(--sand);
-    }
-    .legal-content h2:first-child { margin-top: 0; }
-    .legal-content p, .legal-content li {
-        color: var(--text-muted);
-        line-height: 1.8;
-        margin-bottom: .75rem;
-    }
-    .legal-content ul, .legal-content ol { padding-left: 1.25rem; }
-    .legal-content strong { color: var(--text); }
-    .legal-meta {
-        font-size: .85rem;
-        color: var(--text-muted);
-        background: var(--bg);
-        padding: 1rem 1.25rem;
-        border-radius: .5rem;
-        margin-bottom: 2rem;
-    }
-
-    @media (max-width: 576px) {
-        .page-hero { padding: 3.5rem 0 3rem; }
-        .legal-content h2 { font-size: 1.25rem; }
-    }
-</style>
-
-<!-- PAGE HERO -->
-<section class="page-hero">
-  <div class="container text-center">
-    <span class="eyebrow" style="color:var(--accent);">Legal</span>
-    <h1 class="page-title mt-3 mb-3">Syarat &amp; Ketentuan</h1>
-    <p class="lead mx-auto" style="max-width:38rem;opacity:.9;">
-      Ketentuan penggunaan layanan Tokopi — baik untuk pemesanan langsung maupun melalui platform digital.
-    </p>
-  </div>
+<section class="page-intro">
+    <div class="wrap">
+        <div class="crumb"><a href="<?= $COMPANY_BASE ?>/index.php">Beranda</a> / Legal</div>
+        <h1><?= e($page_title) ?></h1>
+    </div>
 </section>
 
-<!-- CONTENT -->
-<section style="padding:4rem 0;">
-  <div class="container">
-    <div class="legal-content">
+<section class="section-tight">
+    <div class="wrap">
+        <div class="prose">
 
-      <div class="legal-meta">
-        <i class="bi bi-info-circle me-2"></i>
-        <strong>Terakhir diperbarui:</strong> <?= date('d F Y') ?> &nbsp;·&nbsp; <strong>Versi:</strong> 1.0
-      </div>
+      <p class="muted" style="font-size:14px;">Terakhir diperbarui: <?= date('d M Y', filemtime(__FILE__)) ?> · Versi 1.0</p>
 
       <h2>1. Penerimaan Ketentuan</h2>
       <p>
@@ -149,8 +89,9 @@ require_once __DIR__ . '/../includes/header_public.php';
         Untuk pertanyaan mengenai syarat dan ketentuan ini, silakan hubungi kami melalui halaman <a href="<?= $COMPANY_BASE ?>/contact.php" style="color:var(--espresso);font-weight:600;">Contact</a> atau email <strong>legal@tokopi.id</strong>.
       </p>
 
+    
+        </div>
     </div>
-  </div>
 </section>
 
 <?php require_once __DIR__ . '/../includes/footer_public.php'; ?>

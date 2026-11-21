@@ -66,6 +66,18 @@ $stmt = $pdo->prepare("
 $stmt->execute([$date_from, $date_to, $tenant_id]);
 $top_rewards = $stmt->fetchAll();
 
+// Tren poin harian (earn vs redeem)
+$stmt = $pdo->prepare("
+    SELECT DATE(created_at) AS tanggal,
+           COALESCE(SUM(CASE WHEN type = 'EARN' THEN points ELSE 0 END), 0) AS earned,
+           COALESCE(SUM(CASE WHEN type = 'REDEEM' THEN ABS(points) ELSE 0 END), 0) AS redeemed
+    FROM customer_points
+    WHERE tenant_id = ? AND DATE(created_at) BETWEEN ? AND ?
+    GROUP BY DATE(created_at) ORDER BY tanggal
+");
+$stmt->execute([$tenant_id, $date_from, $date_to]);
+$points_daily = $stmt->fetchAll();
+
 $success = flash_get('success');
 $error   = flash_get('error');
 
@@ -75,50 +87,60 @@ require_once __DIR__ . '/../../includes/header.php';
 <?php if ($success): ?><div class="alert alert-success alert-dismissible fade show"><?= e($success) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
 <?php if ($error): ?><div class="alert alert-danger alert-dismissible fade show"><?= e($error) ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div><?php endif; ?>
 
-<!-- Filter -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small">Dari Tanggal</label>
-                <input type="date" name="date_from" class="form-control form-control-sm" value="<?= e($date_from) ?>">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small">Sampai Tanggal</label>
-                <input type="date" name="date_to" class="form-control form-control-sm" value="<?= e($date_to) ?>">
-            </div>
-            <div class="col-md-3">
-                <button type="submit" class="btn btn-espresso btn-sm"><i class="bi bi-search me-1"></i> Filter</button>
-            </div>
-        </form>
+<?php $show_outlet = false; require __DIR__ . '/../../includes/report_filter.php'; ?>
+
+<?php
+$redeem_rate = (int)$points_stats['total_earned'] > 0 ? (int)$points_stats['total_redeemed'] / (int)$points_stats['total_earned'] * 100 : 0;
+?>
+<div class="kpi-grid">
+    <div class="kpi">
+        <div class="kpi-label"><i class="bi bi-people" aria-hidden="true"></i> Total member</div>
+        <div class="kpi-value"><?= number_format((int)$summary['total_member'], 0, ',', '.') ?></div>
+        <div class="kpi-foot"><span><?= (int)$points_stats['member_earning'] ?> aktif di periode ini</span></div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label"><i class="bi bi-coin" aria-hidden="true"></i> Poin beredar</div>
+        <div class="kpi-value"><?= number_format((int)$summary['total_points'], 0, ',', '.') ?></div>
+        <div class="kpi-foot"><span>kewajiban poin saat ini</span></div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label"><i class="bi bi-plus-circle" aria-hidden="true"></i> Poin diberikan</div>
+        <div class="kpi-value">+<?= number_format((int)$points_stats['total_earned'], 0, ',', '.') ?></div>
+        <div class="kpi-foot"><span>periode terpilih</span></div>
+    </div>
+    <div class="kpi">
+        <div class="kpi-label"><i class="bi bi-gift" aria-hidden="true"></i> Poin ditukar</div>
+        <div class="kpi-value">−<?= number_format((int)$points_stats['total_redeemed'], 0, ',', '.') ?></div>
+        <div class="kpi-foot"><span>redeem rate <?= number_format($redeem_rate, 1, ',', '.') ?>%</span></div>
     </div>
 </div>
 
-<!-- Summary -->
 <div class="row g-3 mb-3">
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">Total Member</div>
-            <div class="money" style="font-size:1.75rem; font-weight:700; color:var(--espresso);"><?= number_format((int)$summary['total_member']) ?></div>
+    <div class="col-xl-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between flex-wrap gap-2">
+                <span><i class="bi bi-graph-up me-1" aria-hidden="true"></i> Poin diberikan vs ditukar</span>
+                <span class="legend-inline"><span style="--c:var(--chart-1)">Diberikan</span><span style="--c:var(--chart-3)">Ditukar</span></span>
+            </div>
+            <div class="card-body">
+                <?php if (empty($points_daily)): ?>
+                    <div class="empty"><i class="bi bi-graph-up" aria-hidden="true"></i>Belum ada aktivitas poin di periode ini.</div>
+                <?php else: ?>
+                    <div class="chart-box"><canvas id="chPoints" role="img" aria-label="Grafik poin diberikan dan ditukar per hari"></canvas></div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">Poin Beredar</div>
-            <div class="money" style="font-size:1.75rem; font-weight:700; color:var(--espresso);"><?= number_format((int)$summary['total_points']) ?></div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">Poin Diberikan</div>
-            <div class="money" style="font-size:1.5rem; font-weight:700; color:#2E7D5B;">+<?= number_format((int)$points_stats['total_earned']) ?></div>
-            <small class="text-muted"><?= (int)$points_stats['member_earning'] ?> member aktif</small>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card p-3">
-            <div class="text-muted small text-uppercase">Poin Ditukar</div>
-            <div class="money" style="font-size:1.5rem; font-weight:700; color:#A83232;">−<?= number_format((int)$points_stats['total_redeemed']) ?></div>
+    <div class="col-xl-4">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-award me-1" aria-hidden="true"></i> Sebaran tier member</div>
+            <div class="card-body">
+                <?php if ((int)$summary['total_member'] === 0): ?>
+                    <div class="empty"><i class="bi bi-people" aria-hidden="true"></i>Belum ada member.</div>
+                <?php else: ?>
+                    <div class="chart-box sm"><canvas id="chTier" role="img" aria-label="Grafik jumlah member per tier"></canvas></div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </div>
@@ -192,5 +214,33 @@ require_once __DIR__ . '/../../includes/header.php';
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/tokopi/assets/js/admin-charts.js?v=20261121b"></script>
+<script>
+<?php if (!empty($points_daily)): ?>
+new Chart(document.getElementById('chPoints'), {
+    type: 'line',
+    data: {
+        labels: <?= json_encode(array_map(function ($d) { return date('d/m', strtotime($d['tanggal'])); }, $points_daily)) ?>,
+        datasets: [
+            { label: 'Diberikan', data: <?= json_encode(array_map(function ($d) { return (int)$d['earned']; }, $points_daily)) ?>, borderColor: TK_COLORS[0], backgroundColor: 'rgba(45,27,10,.08)', fill: true, tension: 0, pointRadius: 2 },
+            { label: 'Ditukar', data: <?= json_encode(array_map(function ($d) { return (int)$d['redeemed']; }, $points_daily)) ?>, borderColor: TK_COLORS[2], tension: 0, pointRadius: 2 }
+        ]
+    },
+    options: { interaction: { mode: 'index', intersect: false }, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } }
+});
+<?php endif; ?>
+<?php if ((int)$summary['total_member'] > 0): ?>
+new Chart(document.getElementById('chTier'), {
+    type: 'bar',
+    data: {
+        labels: ['Bronze', 'Silver', 'Gold'],
+        datasets: [{ data: [<?= (int)$summary['bronze'] ?>, <?= (int)$summary['silver'] ?>, <?= (int)$summary['gold'] ?>], backgroundColor: ['#A9713F', '#9AA0A6', '#C9A227'], borderRadius: 5, maxBarThickness: 48 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } }
+});
+<?php endif; ?>
+</script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

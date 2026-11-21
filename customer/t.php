@@ -12,18 +12,24 @@ $token = trim($_GET['token'] ?? '');
 // JIKA TANPA TOKEN → TAMPILKAN LANDING PAGE "SCAN QR DULU"
 // ============================================================
 if ($token === '') {
-    ?>
+?>
     <!DOCTYPE html>
     <html lang="id">
+
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Scan QR Dulu · Tokopi</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
         <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                -webkit-tap-highlight-color: transparent;
+            }
+
             body {
                 font-family: 'Plus Jakarta Sans', sans-serif;
                 background: linear-gradient(165deg, #1A0F06 0%, #2D1B0A 50%, #4A3418 100%);
@@ -37,26 +43,39 @@ if ($token === '') {
             }
 
             /* Ornamen background */
-            body::before, body::after {
-                content: ''; position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
-            }
-            body::before {
-                width: 350px; height: 350px;
-                background: radial-gradient(circle, rgba(225,220,201,.12) 0%, transparent 70%);
-                top: -100px; right: -100px;
-            }
+            body::before,
             body::after {
-                width: 300px; height: 300px;
-                background: radial-gradient(circle, rgba(184,133,58,.15) 0%, transparent 70%);
-                bottom: -80px; left: -100px;
+                content: '';
+                position: absolute;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            body::before {
+                width: 350px;
+                height: 350px;
+                background: radial-gradient(circle, rgba(225, 220, 201, .12) 0%, transparent 70%);
+                top: -100px;
+                right: -100px;
+            }
+
+            body::after {
+                width: 300px;
+                height: 300px;
+                background: radial-gradient(circle, rgba(184, 133, 58, .15) 0%, transparent 70%);
+                bottom: -80px;
+                left: -100px;
             }
 
             /* Pattern garis diagonal */
             .bg-pattern {
-                position: absolute; inset: 0;
-                background-image: linear-gradient(45deg, transparent 47%, rgba(225,220,201,.03) 48%, rgba(225,220,201,.03) 52%, transparent 53%);
+                position: absolute;
+                inset: 0;
+                background-image: linear-gradient(45deg, transparent 47%, rgba(225, 220, 201, .03) 48%, rgba(225, 220, 201, .03) 52%, transparent 53%);
                 background-size: 30px 30px;
-                pointer-events: none; z-index: 0;
+                pointer-events: none;
+                z-index: 0;
             }
 
             .card-scan {
@@ -66,32 +85,39 @@ if ($token === '') {
                 width: 100%;
                 max-width: 400px;
                 text-align: center;
-                box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+                box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
                 position: relative;
                 z-index: 10;
             }
 
             .icon-scan {
-                width: 88px; height: 88px;
+                width: 88px;
+                height: 88px;
                 background: linear-gradient(135deg, #FAF6EC 0%, #E1DCC9 100%);
                 color: #2D1B0A;
                 border-radius: 50%;
-                display: inline-flex; align-items: center; justify-content: center;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
                 font-size: 2.5rem;
                 margin-bottom: 24px;
-                box-shadow: 0 8px 24px rgba(45,27,10,0.1);
+                box-shadow: 0 8px 24px rgba(45, 27, 10, 0.1);
             }
 
             .title {
                 font-family: 'Playfair Display', serif;
-                font-size: 1.8rem; font-weight: 700;
-                color: #2D1B0A; margin-bottom: 12px;
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #2D1B0A;
+                margin-bottom: 12px;
                 letter-spacing: -0.02em;
             }
 
             .desc {
-                font-size: 0.9rem; color: #6B5B4A;
-                line-height: 1.6; margin-bottom: 32px;
+                font-size: 0.9rem;
+                color: #6B5B4A;
+                line-height: 1.6;
+                margin-bottom: 32px;
             }
 
             .steps {
@@ -104,50 +130,91 @@ if ($token === '') {
             }
 
             .step {
-                display: flex; align-items: flex-start; gap: 16px;
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
                 padding: 12px 0;
             }
-            .step:not(:last-child) { border-bottom: 1px dashed #EBE6DA; }
-            
+
+            .step:not(:last-child) {
+                border-bottom: 1px dashed #EBE6DA;
+            }
+
             .step-num {
-                width: 28px; height: 28px;
+                width: 28px;
+                height: 28px;
                 border-radius: 50%;
-                background: #2D1B0A; color: #fff;
-                font-size: 0.8rem; font-weight: 700;
-                display: flex; align-items: center; justify-content: center;
+                background: #2D1B0A;
+                color: #fff;
+                font-size: 0.8rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 flex-shrink: 0;
             }
-            
+
             .step-text {
-                font-size: 0.88rem; color: #4A3418;
-                line-height: 1.5; font-weight: 500;
+                font-size: 0.88rem;
+                color: #4A3418;
+                line-height: 1.5;
+                font-weight: 500;
                 padding-top: 4px;
             }
 
             .btn-primary {
-                display: flex; align-items: center; justify-content: center; gap: 8px;
-                width: 100%; padding: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                width: 100%;
+                padding: 16px;
                 background: linear-gradient(135deg, #2D1B0A 0%, #1A0F06 100%);
-                color: #fff; text-decoration: none;
-                border-radius: 16px; font-weight: 700; font-size: 0.95rem;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 16px;
+                font-weight: 700;
+                font-size: 0.95rem;
                 transition: all 0.25s ease;
-                box-shadow: 0 8px 24px rgba(45,27,10,0.3);
+                box-shadow: 0 8px 24px rgba(45, 27, 10, 0.3);
                 border: none;
             }
-            .btn-primary:active { transform: scale(0.98); }
+
+            .btn-primary:active {
+                transform: scale(0.98);
+            }
 
             .btn-outline {
-                display: flex; align-items: center; justify-content: center; gap: 8px;
-                width: 100%; padding: 16px;
-                background: transparent; color: #6B5B4A;
-                text-decoration: none; border-radius: 16px;
-                font-weight: 600; font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                width: 100%;
+                padding: 16px;
+                background: transparent;
+                color: #6B5B4A;
+                text-decoration: none;
+                border-radius: 16px;
+                font-weight: 600;
+                font-size: 0.9rem;
                 transition: all 0.25s ease;
                 margin-top: 8px;
             }
-            .btn-outline:active { background: #FAF9F5; }
+
+            .btn-outline:active {
+                background: #FAF9F5;
+            }
+
+            @media (min-width: 768px) {
+                body {
+                    background: #1A1A1A;
+                    /* Biar sama dengan yang lain */
+                }
+            }
         </style>
+        <link href="/tokopi/assets/css/customer.css?v=20261121d" rel="stylesheet">
     </head>
+
     <body>
         <div class="bg-pattern"></div>
 
@@ -179,8 +246,9 @@ if ($token === '') {
             </a>
         </div>
     </body>
+
     </html>
-    <?php
+<?php
     exit;
 }
 
@@ -201,18 +269,24 @@ $table = $stmt->fetch();
 
 // Kalau token tidak valid / meja tidak aktif → tampilkan error page yang ramah
 if (!$table) {
-    ?>
+?>
     <!DOCTYPE html>
     <html lang="id">
+
     <head>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>QR Tidak Valid · Tokopi</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
         <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                -webkit-tap-highlight-color: transparent;
+            }
+
             body {
                 font-family: 'Plus Jakarta Sans', sans-serif;
                 background: linear-gradient(165deg, #1A0F06 0%, #2D1B0A 50%, #4A3418 100%);
@@ -226,25 +300,38 @@ if (!$table) {
             }
 
             /* Ornamen background */
-            body::before, body::after {
-                content: ''; position: absolute; border-radius: 50%; pointer-events: none; z-index: 0;
-            }
-            body::before {
-                width: 350px; height: 350px;
-                background: radial-gradient(circle, rgba(168,50,50,.15) 0%, transparent 70%);
-                top: -100px; right: -100px;
-            }
+            body::before,
             body::after {
-                width: 300px; height: 300px;
-                background: radial-gradient(circle, rgba(184,133,58,.15) 0%, transparent 70%);
-                bottom: -80px; left: -100px;
+                content: '';
+                position: absolute;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            body::before {
+                width: 350px;
+                height: 350px;
+                background: radial-gradient(circle, rgba(168, 50, 50, .15) 0%, transparent 70%);
+                top: -100px;
+                right: -100px;
+            }
+
+            body::after {
+                width: 300px;
+                height: 300px;
+                background: radial-gradient(circle, rgba(184, 133, 58, .15) 0%, transparent 70%);
+                bottom: -80px;
+                left: -100px;
             }
 
             .bg-pattern {
-                position: absolute; inset: 0;
-                background-image: linear-gradient(45deg, transparent 47%, rgba(225,220,201,.03) 48%, rgba(225,220,201,.03) 52%, transparent 53%);
+                position: absolute;
+                inset: 0;
+                background-image: linear-gradient(45deg, transparent 47%, rgba(225, 220, 201, .03) 48%, rgba(225, 220, 201, .03) 52%, transparent 53%);
                 background-size: 30px 30px;
-                pointer-events: none; z-index: 0;
+                pointer-events: none;
+                z-index: 0;
             }
 
             .card-error {
@@ -254,47 +341,65 @@ if (!$table) {
                 width: 100%;
                 max-width: 400px;
                 text-align: center;
-                box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+                box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
                 position: relative;
                 z-index: 10;
             }
 
             .icon-error {
-                width: 88px; height: 88px;
+                width: 88px;
+                height: 88px;
                 background: #FEF2F2;
                 color: #991B1B;
                 border-radius: 50%;
-                display: inline-flex; align-items: center; justify-content: center;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
                 font-size: 2.5rem;
                 margin-bottom: 24px;
-                box-shadow: 0 8px 24px rgba(168,50,50,0.1);
+                box-shadow: 0 8px 24px rgba(168, 50, 50, 0.1);
             }
 
             .title {
                 font-family: 'Playfair Display', serif;
-                font-size: 1.8rem; font-weight: 700;
-                color: #2D1B0A; margin-bottom: 12px;
+                font-size: 1.8rem;
+                font-weight: 700;
+                color: #2D1B0A;
+                margin-bottom: 12px;
                 letter-spacing: -0.02em;
             }
 
             .desc {
-                font-size: 0.9rem; color: #6B5B4A;
-                line-height: 1.6; margin-bottom: 32px;
+                font-size: 0.9rem;
+                color: #6B5B4A;
+                line-height: 1.6;
+                margin-bottom: 32px;
             }
 
             .btn-primary {
-                display: flex; align-items: center; justify-content: center; gap: 8px;
-                width: 100%; padding: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                width: 100%;
+                padding: 16px;
                 background: linear-gradient(135deg, #2D1B0A 0%, #1A0F06 100%);
-                color: #fff; text-decoration: none;
-                border-radius: 16px; font-weight: 700; font-size: 0.95rem;
+                color: #fff;
+                text-decoration: none;
+                border-radius: 16px;
+                font-weight: 700;
+                font-size: 0.95rem;
                 transition: all 0.25s ease;
-                box-shadow: 0 8px 24px rgba(45,27,10,0.3);
+                box-shadow: 0 8px 24px rgba(45, 27, 10, 0.3);
                 border: none;
             }
-            .btn-primary:active { transform: scale(0.98); }
+
+            .btn-primary:active {
+                transform: scale(0.98);
+            }
         </style>
     </head>
+
     <body>
         <div class="bg-pattern"></div>
 
@@ -307,8 +412,9 @@ if (!$table) {
             </a>
         </div>
     </body>
+
     </html>
-    <?php
+<?php
     exit;
 }
 

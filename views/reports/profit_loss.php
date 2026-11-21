@@ -161,64 +161,11 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
 <?php endif; ?>
 
-<!-- Filter -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form method="GET" class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label class="form-label small">Dari Tanggal</label>
-                <input type="date" name="date_from" class="form-control form-control-sm" value="<?= e($date_from) ?>" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label small">Sampai Tanggal</label>
-                <input type="date" name="date_to" class="form-control form-control-sm" value="<?= e($date_to) ?>" required>
-            </div>
-
-            <?php if (is_role('owner')): ?>
-                <div class="col-md-3">
-                    <label class="form-label small">Outlet</label>
-                    <select name="outlet" class="form-select form-select-sm">
-                        <option value="0">Semua Outlet (Konsolidasi)</option>
-                        <?php
-                        $stmt = $pdo->prepare("SELECT id, nama FROM outlets WHERE tenant_id = ? AND is_active = 1 ORDER BY id");
-                        $stmt->execute([$tenant_id]);
-                        foreach ($stmt->fetchAll() as $o):
-                        ?>
-                            <option value="<?= (int)$o['id'] ?>" <?= $filter_outlet === (int)$o['id'] ? 'selected' : '' ?>>
-                                <?= e($o['nama']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-            <?php endif; ?>
-
-            <div class="col-md-3 d-flex gap-2">
-                <button type="submit" class="btn btn-espresso btn-sm flex-fill">
-                    <i class="bi bi-search me-1"></i> Filter
-                </button>
-                <a href="/tokopi/views/reports/profit_loss.php" class="btn btn-outline-secondary btn-sm">Reset</a>
-            </div>
-        </form>
-
-        <div class="d-flex gap-2 mt-3 pt-3 border-top">
-            <span class="small text-muted me-2">Quick:</span>
-            <a href="?date_from=<?= date('Y-m-d') ?>&date_to=<?= date('Y-m-d') ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">Hari ini</a>
-            <a href="?date_from=<?= date('Y-m-01') ?>&date_to=<?= date('Y-m-d') ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">Bulan ini</a>
-            <a href="?date_from=<?= date('Y-m-01', strtotime('first day of last month')) ?>&date_to=<?= date('Y-m-t', strtotime('last day of last month')) ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">Bulan lalu</a>
-            <a href="?date_from=<?= date('Y-01-01') ?>&date_to=<?= date('Y-m-d') ?><?= $filter_outlet ? '&outlet=' . $filter_outlet : '' ?>" class="btn btn-sm btn-outline-dark">Tahun ini</a>
-        </div>
-    </div>
-</div>
-
-<!-- Export Bar -->
-<div class="d-flex gap-2 mb-3" id="export-bar">
-    <button class="btn btn-outline-dark btn-sm" onclick="window.print()">
-        <i class="bi bi-printer me-1"></i> Print Struk
-    </button>
-    <button class="btn btn-outline-dark btn-sm" onclick="exportCSV()">
-        <i class="bi bi-download me-1"></i> Export CSV
-    </button>
-</div>
+<?php
+$report_actions = '<button type="button" class="btn btn-outline-espresso btn-sm" onclick="window.print()"><i class="bi bi-printer me-1" aria-hidden="true"></i>Print</button>'
+    . '<button type="button" class="btn btn-outline-espresso btn-sm" onclick="exportCSV()"><i class="bi bi-filetype-csv me-1" aria-hidden="true"></i>CSV</button>';
+require __DIR__ . '/../../includes/report_filter.php';
+?>
 
 <!-- Print header -->
 <div class="print-only" style="display:none;">
@@ -303,31 +250,21 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <div class="col-md-6">
         <div class="card h-100">
-            <div class="card-header">
-                <i class="bi bi-percent me-1"></i> Margin
+            <div class="card-header d-flex justify-content-between flex-wrap gap-2">
+                <span><i class="bi bi-bar-chart-steps me-1" aria-hidden="true"></i> Dari omzet ke laba bersih</span>
+                <span class="small text-muted fw-normal"><?= number_format((int)$sales['total_order'], 0, ',', '.') ?> order</span>
             </div>
             <div class="card-body">
-                <div class="mb-4">
-                    <div class="text-muted small text-uppercase">Total Order</div>
-                    <div class="money" style="font-size:1.75rem; font-weight:700;">
-                        <?= number_format((int)$sales['total_order']) ?>
+                <div class="chart-box" style="height:240px;"><canvas id="chWaterfall" role="img" aria-label="Grafik air terjun omzet, HPP, laba kotor, biaya operasional, laba bersih"></canvas></div>
+                <div class="row g-2 mt-2 text-center">
+                    <div class="col-6">
+                        <div class="kpi-label justify-content-center">Gross margin</div>
+                        <div class="num fw-bold fs-5" style="color:<?= $gross_margin_pct >= 50 ? 'var(--adm-up)' : ($gross_margin_pct >= 30 ? 'var(--color-warning)' : 'var(--adm-down)') ?>"><?= number_format($gross_margin_pct, 1, ',', '.') ?>%</div>
                     </div>
-                </div>
-
-                <div class="mb-4">
-                    <div class="text-muted small text-uppercase">Gross Margin</div>
-                    <div class="money" style="font-size:1.5rem; font-weight:700; color:<?= $gross_margin_pct >= 50 ? '#2E7D5B' : ($gross_margin_pct >= 30 ? '#B8860B' : '#A83232') ?>;">
-                        <?= number_format($gross_margin_pct, 1) ?>%
+                    <div class="col-6">
+                        <div class="kpi-label justify-content-center">Net margin</div>
+                        <div class="num fw-bold fs-5" style="color:<?= $net_margin_pct >= 20 ? 'var(--adm-up)' : ($net_margin_pct >= 10 ? 'var(--color-warning)' : 'var(--adm-down)') ?>"><?= number_format($net_margin_pct, 1, ',', '.') ?>%</div>
                     </div>
-                    <small class="text-muted">(Laba Kotor ÷ Omzet)</small>
-                </div>
-
-                <div class="mb-0">
-                    <div class="text-muted small text-uppercase">Net Margin</div>
-                    <div class="money" style="font-size:1.5rem; font-weight:700; color:<?= $net_margin_pct >= 20 ? '#2E7D5B' : ($net_margin_pct >= 10 ? '#B8860B' : '#A83232') ?>;">
-                        <?= number_format($net_margin_pct, 1) ?>%
-                    </div>
-                    <small class="text-muted">(Laba Bersih ÷ Omzet)</small>
                 </div>
             </div>
         </div>
@@ -465,6 +402,32 @@ function exportCSV() {
     a.click();
     URL.revokeObjectURL(url);
 }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="/tokopi/assets/js/admin-charts.js?v=20261121b"></script>
+<script>
+(function () {
+    var omzet = <?= json_encode($omzet) ?>, hpp = <?= json_encode($hpp) ?>, gross = <?= json_encode($gross_profit) ?>,
+        exp = <?= json_encode($total_expense) ?>, net = <?= json_encode($net_profit) ?>;
+    var bars = [[0, omzet], [gross, omzet], [0, gross], [Math.min(gross, net), Math.max(gross, net)], [0, net]];
+    var vals = [omzet, -hpp, gross, -exp, net];
+    new Chart(document.getElementById('chWaterfall'), {
+        type: 'bar',
+        data: {
+            labels: ['Omzet', 'HPP', ['Laba', 'kotor'], ['Biaya', 'ops.'], ['Laba', 'bersih']],
+            datasets: [{
+                data: bars,
+                backgroundColor: [TK_COLORS[0], '#D9A79A', TK_COLORS[1], '#D9A79A', net >= 0 ? '#1F7A53' : '#B42F2F'],
+                borderRadius: 4, maxBarThickness: 46
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: function (c) { return ' ' + tkRp(vals[c.dataIndex]); } } } },
+            scales: { y: { beginAtZero: true, ticks: { maxTicksLimit: 5, callback: function (v) { return tkRpShort(v); } } }, x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: false, font: { size: 11 } } } }
+        }
+    });
+})();
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

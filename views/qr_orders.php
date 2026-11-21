@@ -218,6 +218,7 @@ require_once __DIR__ . '/../includes/header.php';
         margin-top: 2px;
     }
 
+    .order-item-mods { font-size: .8rem; font-weight: 700; color: #2D1B0A; background: #F3F0E6; border-radius: 6px; padding: 2px 8px; display: inline-block; margin-top: 3px; }
     .order-item-note {
         font-size: 0.7rem;
         color: #c2410c;
@@ -342,16 +343,16 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="qr-tabs">
     <div class="qr-tab" data-status="CASH_PENDING">
-        💰 Menunggu Bayar <span class="badge-count" id="count-CASH_PENDING">0</span>
+        <i class="bi bi-hourglass-split" aria-hidden="true"></i> Menunggu Bayar <span class="badge-count" id="count-CASH_PENDING">0</span>
     </div>
     <div class="qr-tab active" data-status="PAID">
-        🔔 Baru <span class="badge-count" id="count-PAID">0</span>
+        <i class="bi bi-bell" aria-hidden="true"></i> Baru <span class="badge-count" id="count-PAID">0</span>
     </div>
     <div class="qr-tab" data-status="PREPARING">
         ⏳ Diproses <span class="badge-count" id="count-PREPARING">0</span>
     </div>
     <div class="qr-tab" data-status="READY">
-        ✅ Siap <span class="badge-count" id="count-READY">0</span>
+        <i class="bi bi-check2-circle" aria-hidden="true"></i> Siap <span class="badge-count" id="count-READY">0</span>
     </div>
     <div class="qr-tab" data-status="all">
         Semua
@@ -489,7 +490,7 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                     </div>
                     <span class="order-qr-status status-badge-${isCashPending ? 'PENDING_PAYMENT' : o.status}">
-                        ${isCashPending ? '💰 Menunggu Bayar' : o.status.replace('_', ' ')}
+                        ${isCashPending ? 'Menunggu Bayar' : o.status.replace('_', ' ')}
                     </span>
                 </div>
 
@@ -509,6 +510,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <div class="order-item-detail">
                                 <div class="order-item-name">${escapeHtml(it.product_nama)}</div>
                                 <div class="order-item-variant">${escapeHtml(it.variant_nama)}</div>
+                                ${it.modifiers ? `<div class="order-item-mods"><i class="bi bi-sliders"></i> ${escapeHtml(it.modifiers)}</div>` : ''}
                                 ${it.note ? `<div class="order-item-note"><i class="bi bi-pencil"></i> ${escapeHtml(it.note)}</div>` : ''}
                             </div>
                         </div>
@@ -570,7 +572,7 @@ require_once __DIR__ . '/../includes/header.php';
                 return;
             }
 
-            alert('✅ Pembayaran dikonfirmasi. Order masuk ke antrian dapur.');
+            alert('Pembayaran dikonfirmasi. Order masuk ke antrian dapur.');
             loadOrders();
         } catch (e) {
             alert('Error: ' + e.message);
@@ -663,6 +665,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <div style="flex:1;">
                         <div class="fw-bold">${escapeHtml(it.product_nama)}</div>
                         <div class="small text-muted">${escapeHtml(it.variant_nama)}</div>
+                        ${it.modifiers ? `<div class="small fw-semibold" style="color:#2D1B0A;"><i class="bi bi-sliders"></i> ${escapeHtml(it.modifiers)}</div>` : ''}
                         ${it.note ? `<div class="small mt-1" style="color:#c2410c; background:#fef3c7; padding:3px 8px; border-radius:6px; display:inline-block;"><i class="bi bi-pencil"></i> ${escapeHtml(it.note)}</div>` : ''}
                     </div>
                     <div class="text-end small" style="font-family:'JetBrains Mono',monospace;">${rupiah(it.line_total)}</div>

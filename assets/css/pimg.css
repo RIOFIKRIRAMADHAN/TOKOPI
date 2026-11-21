@@ -1,0 +1,26 @@
+/* =========================================
+   PRODUCT IMAGE + PLACEHOLDER
+   Dipakai oleh helper PHP product_img().
+   ========================================= */
+.pimg { position: relative; overflow: hidden; width: 100%; height: 100%; background: var(--color-sand-light, #F3F0E6); }
+.pimg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.pimg-ph { display: flex; align-items: center; justify-content: center; isolation: isolate; }
+.pimg-ph::before { /* tekstur titik halus, kesan kertas menu */
+  content: ''; position: absolute; inset: 0; z-index: -1; opacity: .18;
+  background-image: radial-gradient(currentColor 1px, transparent 1.2px);
+  background-size: 10px 10px;
+}
+.pimg-ph span {
+  font-family: var(--font-serif, 'Playfair Display', Georgia, serif);
+  font-weight: 700; letter-spacing: -.02em; line-height: 1;
+  font-size: clamp(1.25rem, 32cqi, 3.5rem);
+}
+.pimg { container-type: inline-size; }
+
+.pimg-t1 { background: #3B2412; color: #E9DFCB; }
+.pimg-t2 { background: #E6DCC6; color: #4A3418; }
+.pimg-t3 { background: #A9471F; color: #FBEFE6; }
+.pimg-t4 { background: #56622F; color: #EEF0DF; }
+.pimg-t5 { background: #D9B47A; color: #2D1B0A; }
+.pimg-t6 { background: #F3ECDD; color: #7A4A22; }

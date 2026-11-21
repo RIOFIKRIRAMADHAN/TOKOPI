@@ -247,7 +247,7 @@ $tenant = $stmt->fetch();
             </div>
         <?php else: ?>
             <div class="center">
-                <div class="bold big" style="font-size:16px;">🍳 TIKET DAPUR</div>
+                <div class="bold big" style="font-size:16px;">TIKET DAPUR</div>
                 <div style="font-size:14px; font-weight:bold;"><?= e($order['outlet_nama']) ?></div>
             </div>
         <?php endif; ?>
@@ -292,6 +292,12 @@ $tenant = $stmt->fetch();
         <?php foreach ($items as $it): ?>
             <div class="item-name bold"><?= e($it['product_nama']) ?></div>
             <div class="item-detail"><?= e($it['variant_nama']) ?></div>
+            <?php foreach ((json_decode((string)($it['modifiers'] ?? ''), true) ?: []) as $m): ?>
+                <div class="item-detail">+ <?= e($m['nama']) ?><?= !$is_kitchen && (float)$m['price'] > 0 ? ' (' . number_format((float)$m['price'], 0, ',', '.') . ')' : '' ?></div>
+            <?php endforeach; ?>
+            <?php if (!empty($it['note'])): ?>
+                <div class="item-detail bold">Catatan: <?= e($it['note']) ?></div>
+            <?php endif; ?>
             <table>
                 <tr>
                     <td><?= (int)$it['qty'] ?> x <?= number_format((float)$it['harga_satuan'], 0, ',', '.') ?></td>
@@ -343,7 +349,7 @@ $tenant = $stmt->fetch();
             <div class="line-solid"></div>
 
             <div class="center footer-note">
-                <div>Terima kasih 🙏</div>
+                <div>Terima kasih</div>
                 <div>Selamat menikmati!</div>
                 <div style="margin-top:6px;">*** <?= e($order['order_no']) ?> ***</div>
             </div>
@@ -358,7 +364,7 @@ $tenant = $stmt->fetch();
             <a href="/tokopi/views/pos.php" class="btn btn-back" style="text-decoration:none; text-align:center;">
                 ← Kembali ke POS
             </a>
-            <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
+            <button class="btn btn-print" onclick="window.print()"><i class="bi bi-printer" aria-hidden="true"></i> Print</button>
         </div>
 
         <script>

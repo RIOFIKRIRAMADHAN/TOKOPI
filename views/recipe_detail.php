@@ -164,7 +164,7 @@ require_once __DIR__ . '/../includes/header.php';
                     <th width="160" class="text-end">Jumlah Pakai</th>
                     <th width="160" class="text-end">HPP / Unit</th>
                     <th width="160" class="text-end">Subtotal</th>
-                    <th width="100" class="text-end">Aksi</th>
+                    <th data-nosort width="100" class="text-end">Aksi</th>
                 </tr>
             </thead>
             <tbody>

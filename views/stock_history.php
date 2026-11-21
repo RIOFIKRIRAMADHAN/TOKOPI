@@ -65,8 +65,9 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="card">
     <div class="card-header">Riwayat Pergerakan Stok (200 terakhir)</div>
+    <div class="d-flex justify-content-end p-2 border-bottom"><div class="table-search"><i class="bi bi-search" aria-hidden="true"></i><input type="search" class="form-control form-control-sm" placeholder="Cari riwayat…" aria-label="Cari riwayat" data-table-filter="#tbl_stock_history"></div></div>
     <div class="table-responsive">
-        <table class="table mb-0">
+        <table class="table table-hover align-middle mb-0" id="tbl_stock_history" data-enhance data-page-size="25">
             <thead>
                 <tr>
                     <th width="160">Waktu</th>
