@@ -249,7 +249,7 @@ try {
             // Catat stock movement
             $stmt = $pdo->prepare("
                 INSERT INTO stock_movements (outlet_id, ingredient_id, type, qty, reference_type, reference_id, note)
-                VALUES (?, ?, 'OUT', ?, 'ORDER', 0, ?)
+                VALUES (?, ?, 'SALE_OUT', ?, 'ORDER', 0, ?)
             ");
             $stmt->execute([$outlet_id, $iid, $need['qty'], "Pesanan QRIS (pending)"]);
         }

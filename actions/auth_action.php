@@ -7,7 +7,8 @@ $action = $_GET['action'] ?? '';
 // ============================================
 // RATE LIMIT HELPER (file-based, simple)
 // ============================================
-function checkRateLimit(string $key, int $maxAttempts = 5, int $windowSeconds = 60): bool {
+function checkRateLimit(string $key, int $maxAttempts = 5, int $windowSeconds = 60): bool
+{
     $file = sys_get_temp_dir() . '/ratelimit_' . md5($key) . '.json';
     $now = time();
 
@@ -37,7 +38,8 @@ function checkRateLimit(string $key, int $maxAttempts = 5, int $windowSeconds = 
     return true;
 }
 
-function clearRateLimit(string $key): void {
+function clearRateLimit(string $key): void
+{
     $file = sys_get_temp_dir() . '/ratelimit_' . md5($key) . '.json';
     @unlink($file);
 }
@@ -114,7 +116,6 @@ if ($action === 'register') {
         clearRateLimit("register:$ip");
         flash_set('success', 'Registrasi berhasil! Silakan login.');
         redirect('/tokopi/login.php');
-
     } catch (Exception $e) {
         $pdo->rollBack();
         flash_set('error', 'Gagal registrasi: ' . $e->getMessage());
@@ -202,8 +203,6 @@ elseif ($action === 'login_kasir') {
     $_SESSION['outlet_id'] = $user['outlet_id'];
 
     redirect('/tokopi/views/pos.php');
-}
-
-else {
+} else {
     redirect('/tokopi/login.php');
 }

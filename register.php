@@ -11,6 +11,7 @@ old_clear();
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,12 +22,43 @@ old_clear();
     <link href="/tokopi/assets/css/app.css" rel="stylesheet">
     <style>
         /* Register page specific */
-        body { background: var(--color-bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-6); }
-        .auth-card { max-width: 480px; width: 100%; background: var(--color-bg-white); border-radius: var(--radius-2xl); border: 1px solid var(--color-border); padding: var(--space-8) var(--space-6); box-shadow: var(--shadow-lg); }
-        .brand-logo { font-family: var(--font-serif); font-size: var(--text-3xl); color: var(--color-espresso); font-weight: var(--font-bold); text-align: center; margin-bottom: var(--space-1); }
-        .brand-sub { text-align: center; color: var(--color-text-muted); font-size: var(--text-sm); margin-bottom: var(--space-6); }
+        body {
+            background: var(--color-bg);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-6);
+        }
+
+        .auth-card {
+            max-width: 480px;
+            width: 100%;
+            background: var(--color-bg-white);
+            border-radius: var(--radius-2xl);
+            border: 1px solid var(--color-border);
+            padding: var(--space-8) var(--space-6);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .brand-logo {
+            font-family: var(--font-serif);
+            font-size: var(--text-3xl);
+            color: var(--color-espresso);
+            font-weight: var(--font-bold);
+            text-align: center;
+            margin-bottom: var(--space-1);
+        }
+
+        .brand-sub {
+            text-align: center;
+            color: var(--color-text-muted);
+            font-size: var(--text-sm);
+            margin-bottom: var(--space-6);
+        }
     </style>
 </head>
+
 <body>
     <div class="auth-card">
         <div class="brand-logo">Tokopi</div>
@@ -79,4 +111,5 @@ old_clear();
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
